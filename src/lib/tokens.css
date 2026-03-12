@@ -1,0 +1,123 @@
+/*
+  Material token system.
+  Ground: uncarved wood. Things emerge from it, not sit on it.
+  Phase drives surface properties — not decoration, semantics.
+*/
+
+@property --luminance {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  /* Ground */
+  --ground:        oklch(17% 0.018 58);
+  --ground-grain:  oklch(22% 0.025 62);
+  --ground-warm:   oklch(28% 0.035 65);
+
+  /* Text */
+  --text-primary:   oklch(87% 0.035 70);
+  --text-secondary: oklch(52% 0.028 66);
+  --text-dim:       oklch(36% 0.020 62);
+
+  /* Accent — the amber that was always there */
+  --amber:        oklch(78% 0.14  78);
+  --amber-dim:    oklch(55% 0.09  72);
+  --amber-deep:   oklch(42% 0.07  68);
+
+  /* Surface emergence — computed from phase */
+  --surface-bg:          var(--ground-grain);
+  --surface-border:      oklch(32% 0.03 64 / 0.4);
+  --surface-shadow:      oklch(10% 0.01 55 / 0.6);
+  --surface-glow:        oklch(70% 0.10 75 / 0);
+
+  /* Motion */
+  --ease-emerge:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-settle:   cubic-bezier(0.4, 0, 0.6, 1);
+  --dur-fast:      120ms;
+  --dur-mid:       280ms;
+  --dur-slow:      520ms;
+
+  /* Type */
+  --font-body:   'EB Garamond', 'Georgia', serif;
+  --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+  --font-ui:     system-ui, sans-serif;
+
+  --size-xs:  0.75rem;
+  --size-sm:  0.875rem;
+  --size-md:  1rem;
+  --size-lg:  1.25rem;
+  --size-xl:  1.75rem;
+  --size-2xl: 2.5rem;
+  --size-3xl: 3.5rem;
+
+  --leading-tight:  1.2;
+  --leading-body:   1.65;
+  --leading-loose:  1.9;
+
+  /* Space */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+}
+
+/* Phase-derived surface properties */
+
+[data-phase="salt"] {
+  --surface-weight:       0.9;
+  --surface-permeability: 0.08;
+  --surface-luminance:    0.15;
+  --surface-roughness:    0.85;
+  --surface-bg:           oklch(20% 0.022 60);
+  --surface-border:       oklch(35% 0.04 65 / 0.5);
+  --surface-glow:         oklch(65% 0.08 72 / 0.06);
+}
+
+[data-phase="fluid"] {
+  --surface-weight:       0.5;
+  --surface-permeability: 0.45;
+  --surface-luminance:    0.4;
+  --surface-roughness:    0.5;
+  --surface-bg:           oklch(22% 0.028 63);
+  --surface-border:       oklch(38% 0.05 68 / 0.45);
+  --surface-glow:         oklch(72% 0.10 76 / 0.10);
+}
+
+[data-phase="volatile"] {
+  --surface-weight:       0.2;
+  --surface-permeability: 0.8;
+  --surface-luminance:    0.7;
+  --surface-roughness:    0.25;
+  --surface-bg:           oklch(24% 0.038 67);
+  --surface-border:       oklch(48% 0.08 72 / 0.5);
+  --surface-glow:         oklch(82% 0.15 80 / 0.18);
+}
+
+/* Hover — the grain remembers it was alive */
+
+[data-phase]:hover,
+[data-phase]:focus-visible {
+  --surface-border: oklch(55% 0.09 74 / 0.6);
+}
+
+[data-phase="volatile"]:hover,
+[data-phase="volatile"]:focus-visible {
+  --surface-glow: oklch(85% 0.18 82 / 0.28);
+}
+
+[data-phase="fluid"]:hover,
+[data-phase="fluid"]:focus-visible {
+  --surface-glow: oklch(76% 0.12 78 / 0.18);
+}
+
+[data-phase="salt"]:hover,
+[data-phase="salt"]:focus-visible {
+  --surface-glow: oklch(68% 0.09 74 / 0.12);
+}

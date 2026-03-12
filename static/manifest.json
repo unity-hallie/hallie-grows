@@ -1,0 +1,159 @@
+[
+  {
+    "slug": "jamestown",
+    "title": "Jamestown",
+    "description": "Bullet hell shooter set in colonial Mars. Shipped on Steam.",
+    "tags": [
+      "game",
+      "shipped",
+      "realtime",
+      "systems"
+    ],
+    "url": "https://store.steampowered.com/app/94200/Jamestown/",
+    "year": 2011,
+    "phase": "salt",
+    "section": "work",
+    "relations": [
+      {
+        "slug": "type-dissolution",
+        "affinity": 0.17
+      }
+    ]
+  },
+  {
+    "slug": "align",
+    "title": "Align",
+    "description": "Trauma-informed Socratic learning platform. Salesforce-integrated.",
+    "tags": [
+      "education",
+      "svelte",
+      "knowledge",
+      "systems"
+    ],
+    "url": null,
+    "year": 2024,
+    "phase": "fluid",
+    "section": "work",
+    "relations": [
+      {
+        "slug": "type-dissolution",
+        "affinity": 0.4
+      },
+      {
+        "slug": "rhizome",
+        "affinity": 0.33
+      }
+    ]
+  },
+  {
+    "slug": "rhizome",
+    "title": "Rhizome",
+    "description": "Graph-native knowledge substrate. Edges as first-class citizens.",
+    "tags": [
+      "graph",
+      "knowledge",
+      "systems",
+      "typescript"
+    ],
+    "url": null,
+    "year": 2025,
+    "phase": "fluid",
+    "section": "work",
+    "relations": [
+      {
+        "slug": "type-dissolution",
+        "affinity": 0.4
+      },
+      {
+        "slug": "align",
+        "affinity": 0.33
+      },
+      {
+        "slug": "quantum-context",
+        "affinity": 0.33
+      }
+    ]
+  },
+  {
+    "slug": "cosmo-sim",
+    "title": "Cosmo Sim",
+    "description": "Relativistic N-body simulator. Observer rest frame. No big bang.",
+    "tags": [
+      "physics",
+      "python",
+      "realtime",
+      "observer"
+    ],
+    "url": null,
+    "year": 2026,
+    "phase": "volatile",
+    "section": "toys",
+    "relations": [
+      {
+        "slug": "quantum-context",
+        "affinity": 0.33
+      }
+    ]
+  },
+  {
+    "slug": "quantum-context",
+    "title": "Quantum Context",
+    "description": "Observer-relative knowledge graph. Confidence ceiling 0.7.",
+    "tags": [
+      "graph",
+      "knowledge",
+      "observer",
+      "python"
+    ],
+    "url": null,
+    "year": 2025,
+    "phase": "volatile",
+    "section": "toys",
+    "relations": [
+      {
+        "slug": "rhizome",
+        "affinity": 0.33
+      },
+      {
+        "slug": "cosmo-sim",
+        "affinity": 0.33
+      },
+      {
+        "slug": "type-dissolution",
+        "affinity": 0.17
+      }
+    ]
+  },
+  {
+    "slug": "type-dissolution",
+    "title": "Type Dissolution",
+    "description": "What alkahest is and why types should be able to dissolve.",
+    "tags": [
+      "systems",
+      "philosophy",
+      "knowledge"
+    ],
+    "url": null,
+    "year": 2025,
+    "phase": "fluid",
+    "section": "explainers",
+    "relations": [
+      {
+        "slug": "align",
+        "affinity": 0.4
+      },
+      {
+        "slug": "rhizome",
+        "affinity": 0.4
+      },
+      {
+        "slug": "jamestown",
+        "affinity": 0.17
+      },
+      {
+        "slug": "quantum-context",
+        "affinity": 0.17
+      }
+    ]
+  }
+]
