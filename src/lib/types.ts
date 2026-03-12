@@ -16,4 +16,5 @@ export interface ManifestItem {
   phase: Phase;
   section: Section;
   relations: Relation[];
+  image: string | null;
 }

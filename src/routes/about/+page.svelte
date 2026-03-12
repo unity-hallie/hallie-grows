@@ -1,3 +1,29 @@
+<script lang="ts">
+  let { data } = $props();
+
+  let blocks = $state<string[]>([]);
+
+  $effect(() => {
+    blocks = (data.content as Record<string, string[]>)['about'] ?? ['tktktk', 'tktktk', 'tktktk'];
+  });
+
+  async function save() {
+    await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'about', blocks: [...blocks] }),
+    });
+  }
+
+  function onblur(e: FocusEvent, i: number) {
+    const text = (e.currentTarget as HTMLElement).innerText.trim();
+    if (text !== blocks[i]) {
+      blocks[i] = text;
+      save();
+    }
+  }
+</script>
+
 <svelte:head>
   <title>about — hallie larsson</title>
 </svelte:head>
@@ -6,29 +32,21 @@
   <h1 id="page-heading" class="page-heading">about</h1>
 
   <div class="bio">
-    <p>
-      I make things that think — games, tools, substrates for other people's thinking.
-      The material matters. How it behaves under pressure matters.
-      What it invites matters more than what it allows.
-    </p>
-
-    <p>
-      Shipped <a href="/work">Jamestown</a> at Final Form Games.
-      Building <a href="/work">Align</a> for people who learn sideways.
-      Thinking through <a href="/toys">cosmo-sim</a> and <a href="/work">rhizome</a>
-      in the margins.
-    </p>
-
-    <p>
-      Based wherever the work is. She/her.
-    </p>
+    {#each blocks as block, i}
+      <p
+        class="tktk"
+        class:filled={block !== 'tktktk'}
+        contenteditable="true"
+        spellcheck="false"
+        onblur={(e) => onblur(e, i)}
+      >{block}</p>
+    {/each}
   </div>
 
   <div class="contact">
     <p class="label">elsewhere</p>
-    <!-- fill in as needed -->
     <ul role="list">
-      <li><a href="https://github.com/hlarsson" target="_blank" rel="noopener">github</a></li>
+      <li><span class="tktk" contenteditable="true" spellcheck="false">tktktk</span></li>
     </ul>
   </div>
 </section>
@@ -40,7 +58,6 @@
 
   .page-heading {
     font-size: var(--size-2xl);
-    font-style: italic;
     margin-bottom: var(--space-12);
   }
 
@@ -81,6 +98,27 @@
   }
 
   .contact a:hover {
-    color: var(--amber);
+    color: var(--rose);
+  }
+
+  .tktk {
+    border-bottom: 1px dashed var(--lichen-dim);
+    color: var(--lichen-dim);
+    cursor: text;
+    outline: none;
+  }
+
+  .tktk:focus {
+    border-bottom-color: var(--lichen);
+    color: var(--text-secondary);
+  }
+
+  .tktk.filled {
+    border-bottom-color: transparent;
+    color: var(--text-secondary);
+  }
+
+  .tktk.filled:focus {
+    border-bottom-color: var(--lichen-dim);
   }
 </style>

@@ -91,7 +91,7 @@
 
   .nav-phase-key div {
     display: flex;
-    gap: var(--space-4);
+    gap: var(--space-8);
     align-items: baseline;
   }
 
@@ -127,7 +127,7 @@
     list-style: none;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-    gap: var(--space-4);
+    gap: var(--space-8);
   }
 
   .see-all {

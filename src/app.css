@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 @import '$lib/tokens.css';
 
 *, *::before, *::after {
@@ -22,17 +22,7 @@ body {
   background: var(--ground);
 }
 
-/* Grain texture overlay — barely there */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
-  opacity: 0.35;
-  z-index: 0;
-}
+/* Background texture handled by ShaderCanvas */
 
 /* Layout */
 
@@ -42,6 +32,8 @@ body::before {
   max-width: 72rem;
   margin: 0 auto;
   padding: 0 var(--space-6);
+  /* Nav and text on dark wall need to read against dark bg */
+  color: var(--panel);
 }
 
 /* Surface — the base material unit */
@@ -49,14 +41,20 @@ body::before {
 .surface {
   background: var(--surface-bg);
   border: 1px solid var(--surface-border);
-  border-radius: 3px;
+  border-radius: 1px;
   box-shadow:
-    0 0 0 1px oklch(100% 0 0 / 0.03) inset,
-    0 1px 3px var(--surface-shadow),
-    0 0 24px var(--surface-glow);
+    0 2px 8px var(--surface-shadow),
+    0 0 30px 6px var(--surface-glow),
+    0 0 80px 16px var(--surface-glow);
   transition:
     border-color var(--dur-mid) var(--ease-emerge),
-    box-shadow var(--dur-mid) var(--ease-emerge);
+    box-shadow var(--dur-slow) var(--ease-emerge);
+}
+
+/* Organic edge — burned, not cut */
+/* Apply to cards and surfaces that should feel hand-made */
+.organic-edge {
+  filter: url(#burn);
 }
 
 /* Typography */
@@ -75,7 +73,7 @@ h3 { font-size: var(--size-lg); }
 p { max-width: 68ch; }
 
 a {
-  color: var(--amber);
+  color: var(--rose);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color var(--dur-fast) var(--ease-emerge);
@@ -83,11 +81,11 @@ a {
 
 a:hover,
 a:focus-visible {
-  border-bottom-color: var(--amber-dim);
+  border-bottom-color: var(--rose-dim);
 }
 
 a:focus-visible {
-  outline: 2px solid var(--amber);
+  outline: 2px solid var(--rose);
   outline-offset: 3px;
   border-radius: 2px;
 }

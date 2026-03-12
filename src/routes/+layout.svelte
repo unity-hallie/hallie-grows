@@ -2,8 +2,15 @@
   import '../app.css';
   import favicon from '$lib/assets/favicon.svg';
   import { page } from '$app/stores';
+  import { onMount } from 'svelte';
+  import ShaderCanvas from '$lib/components/ShaderCanvas.svelte';
 
   let { children } = $props();
+
+  onMount(() => {
+    const saved = localStorage.getItem('hallie-font-choice');
+    if (saved) document.documentElement.style.setProperty('--font-body', saved);
+  });
 
   const nav = [
     { href: '/work',       label: 'work',       phase: 'salt'     },
@@ -20,6 +27,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 </svelte:head>
+
+<ShaderCanvas />
+
+<!-- SVG filter definitions — organic/fractal edges, like burned marks on pine -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;">
+  <defs>
+    <filter id="burn" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.028" numOctaves="4" seed="12" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="burn-strong" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.030 0.022" numOctaves="5" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 
 <div class="site-wrapper">
   <header class="site-header">
@@ -66,8 +89,7 @@
   .wordmark {
     font-family: var(--font-body);
     font-size: var(--size-lg);
-    font-style: italic;
-    color: var(--text-primary);
+    color: var(--panel);
     border-bottom: none;
     letter-spacing: -0.01em;
     flex-shrink: 0;
@@ -76,7 +98,7 @@
 
   .wordmark:hover,
   .wordmark:focus-visible {
-    color: var(--amber);
+    color: var(--rose);
     border-bottom: none;
   }
 
@@ -92,7 +114,7 @@
     font-size: var(--size-sm);
     letter-spacing: 0.06em;
     text-transform: lowercase;
-    color: var(--text-secondary);
+    color: oklch(70% 0.015 70);
     border-bottom: 1px solid transparent;
     transition:
       color var(--dur-fast) var(--ease-emerge),
@@ -102,19 +124,19 @@
   [data-phase="salt"].nav-link:hover,
   [data-phase="salt"].nav-link[aria-current="page"] {
     color: var(--text-primary);
-    border-bottom-color: var(--amber-deep);
+    border-bottom-color: var(--rose-deep);
   }
 
   [data-phase="volatile"].nav-link:hover,
   [data-phase="volatile"].nav-link[aria-current="page"] {
-    color: var(--amber);
-    border-bottom-color: var(--amber);
+    color: var(--rose);
+    border-bottom-color: var(--rose);
   }
 
   [data-phase="fluid"].nav-link:hover,
   [data-phase="fluid"].nav-link[aria-current="page"] {
-    color: var(--amber-dim);
-    border-bottom-color: var(--amber-dim);
+    color: var(--lichen);
+    border-bottom-color: var(--lichen);
   }
 
   main {
@@ -124,13 +146,13 @@
 
   .site-footer {
     padding: var(--space-12) 0 var(--space-8);
-    border-top: 1px solid oklch(30% 0.02 60 / 0.4);
+    border-top: 1px solid oklch(35% 0.025 58 / 0.18);
   }
 
   .text-dim {
     font-family: var(--font-ui);
     font-size: var(--size-xs);
-    color: var(--text-dim);
+    color: oklch(45% 0.012 65);
     letter-spacing: 0.04em;
   }
 </style>

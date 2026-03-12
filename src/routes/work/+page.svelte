@@ -23,11 +23,12 @@
 
 <style>
   .page-heading {
+    color: var(--panel);
     font-size: var(--size-2xl);
-    font-style: italic;
     margin-bottom: var(--space-3);
   }
   .page-sub {
+    color: oklch(62% 0.018 72);
     color: var(--text-secondary);
     font-style: italic;
     margin-bottom: var(--space-12);
@@ -36,6 +37,6 @@
     list-style: none;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-    gap: var(--space-4);
+    gap: var(--space-8);
   }
 </style>

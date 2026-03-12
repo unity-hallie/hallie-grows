@@ -4,8 +4,30 @@
   let { data } = $props();
   let item: ManifestItem = $derived(data.item);
   let related: ManifestItem[] = $derived(
-    item.relations.map((r: { slug: string }) => data.manifest.find((i: ManifestItem) => i.slug === r.slug)).filter(Boolean)
+    item.relations.map((r: { slug: string }) => data.manifest.find((i: ManifestItem) => i.slug === r.slug)).filter((x): x is ManifestItem => !!x)
   );
+
+  let blocks = $state<string[]>([]);
+
+  $effect(() => {
+    blocks = (data.content as Record<string, string[]>)[item.slug] ?? ['tktktk', 'tktktk'];
+  });
+
+  async function save() {
+    await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: item.slug, blocks: [...blocks] }),
+    });
+  }
+
+  function onblur(e: FocusEvent, i: number) {
+    const text = (e.currentTarget as HTMLElement).innerText.trim();
+    if (text !== blocks[i]) {
+      blocks[i] = text;
+      save();
+    }
+  }
 </script>
 
 <svelte:head>
@@ -29,8 +51,15 @@
   </header>
 
   <div class="item-content">
-    <!-- content goes here — prose, screenshots, etc. -->
-    <p class="placeholder">— more to come —</p>
+    {#each blocks as block, i}
+      <p
+        class="tktk"
+        class:filled={block !== 'tktktk'}
+        contenteditable="true"
+        spellcheck="false"
+        onblur={(e) => onblur(e, i)}
+      >{block}</p>
+    {/each}
   </div>
 
   {#if related.length}
@@ -57,7 +86,7 @@
 
   .item-header {
     padding-bottom: var(--space-12);
-    border-bottom: 1px solid oklch(30% 0.02 60 / 0.4);
+    border-bottom: 1px solid oklch(35% 0.025 58 / 0.18);
     margin-bottom: var(--space-12);
   }
 
@@ -72,7 +101,7 @@
     font-family: var(--font-mono);
     font-size: var(--size-xs);
     letter-spacing: 0.08em;
-    color: var(--amber-dim);
+    color: var(--rose-dim);
   }
 
   .item-year {
@@ -83,7 +112,6 @@
 
   .item-title {
     font-size: var(--size-2xl);
-    font-style: italic;
     margin-bottom: var(--space-4);
   }
 
@@ -99,18 +127,38 @@
     font-family: var(--font-ui);
     font-size: var(--size-sm);
     letter-spacing: 0.04em;
-    color: var(--amber-dim);
+    color: var(--rose-dim);
   }
 
-  .placeholder {
-    color: var(--text-dim);
+  .tktk {
+    border-bottom: 1px dashed var(--lichen-dim);
+    color: var(--lichen-dim);
+    cursor: text;
+    outline: none;
+    display: block;
+    margin-bottom: var(--space-4);
+  }
+
+  .tktk:focus {
+    border-bottom-color: var(--lichen);
+    color: var(--text-secondary);
+  }
+
+  .tktk.filled {
+    border-bottom-color: transparent;
+    color: var(--text-secondary);
     font-style: italic;
+    line-height: var(--leading-loose);
+  }
+
+  .tktk.filled:focus {
+    border-bottom-color: var(--lichen-dim);
   }
 
   .related {
     margin-top: var(--space-16);
     padding-top: var(--space-8);
-    border-top: 1px solid oklch(30% 0.02 60 / 0.3);
+    border-top: 1px solid oklch(35% 0.025 58 / 0.15);
   }
 
   .related-heading {
@@ -141,7 +189,7 @@
   }
 
   .related-list a:hover {
-    color: var(--amber);
+    color: var(--rose);
   }
 
   .related-phase {

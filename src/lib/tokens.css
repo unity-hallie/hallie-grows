@@ -1,6 +1,6 @@
 /*
   Material token system.
-  Ground: uncarved wood. Things emerge from it, not sit on it.
+  Ground: uncarved pine. Taiga light. Rocky coast.
   Phase drives surface properties — not decoration, semantics.
 */
 
@@ -11,26 +11,42 @@
 }
 
 :root {
-  /* Ground */
-  --ground:        oklch(17% 0.018 58);
-  --ground-grain:  oklch(22% 0.025 62);
-  --ground-warm:   oklch(28% 0.035 65);
+  /* Ground — near-black fallback, canvas provides actual wall */
+  --ground:        oklch(8% 0.008 60);
+  --ground-grain:  oklch(12% 0.012 60);
+  --ground-warm:   oklch(16% 0.016 58);
 
-  /* Text */
-  --text-primary:   oklch(87% 0.035 70);
-  --text-secondary: oklch(52% 0.028 66);
-  --text-dim:       oklch(36% 0.020 62);
+  /* Panel surfaces — lit, warm, floating on the wall */
+  --panel:         oklch(92% 0.030 80);
+  --panel-warm:    oklch(88% 0.038 76);
+  --panel-deep:    oklch(84% 0.044 73);
 
-  /* Accent — the amber that was always there */
-  --amber:        oklch(78% 0.14  78);
-  --amber-dim:    oklch(55% 0.09  72);
-  --amber-deep:   oklch(42% 0.07  68);
+  /* Text — charred, warm dark (for use on panels) */
+  --text-primary:   oklch(20% 0.030 52);
+  --text-secondary: oklch(44% 0.025 60);
+  --text-dim:       oklch(62% 0.018 68);
 
-  /* Surface emergence — computed from phase */
-  --surface-bg:          var(--ground-grain);
-  --surface-border:      oklch(32% 0.03 64 / 0.4);
-  --surface-shadow:      oklch(10% 0.01 55 / 0.6);
-  --surface-glow:        oklch(70% 0.10 75 / 0);
+  /* Accent — pottery pink, matte glaze */
+  --rose:        oklch(58% 0.100 10);
+  --rose-dim:    oklch(48% 0.070 12);
+  --rose-deep:   oklch(38% 0.055 15);
+
+  /* Lichen — rocky coast vegetation */
+  --lichen:      oklch(62% 0.075 140);
+  --lichen-dim:  oklch(50% 0.055 135);
+
+  /* Granite — coastal stone */
+  --granite:     oklch(55% 0.012 255);
+  --granite-dim: oklch(42% 0.008 260);
+
+  /* Backlit — fluorescent behind pine, warm cream */
+  --backlit:     oklch(97% 0.040 88);
+
+  /* Surface defaults — panels floating on the dark wall */
+  --surface-bg:     var(--panel);
+  --surface-border: oklch(35% 0.030 58 / 0.18);
+  --surface-shadow: oklch(10% 0.010 50 / 0.40);
+  --surface-glow:   oklch(85% 0.060 82 / 0);
 
   /* Motion */
   --ease-emerge:   cubic-bezier(0.22, 1, 0.36, 1);
@@ -40,7 +56,7 @@
   --dur-slow:      520ms;
 
   /* Type */
-  --font-body:   'EB Garamond', 'Georgia', serif;
+  --font-body:   'Libre Baskerville', 'Georgia', serif;
   --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
   --font-ui:     system-ui, sans-serif;
 
@@ -71,53 +87,45 @@
 /* Phase-derived surface properties */
 
 [data-phase="salt"] {
-  --surface-weight:       0.9;
-  --surface-permeability: 0.08;
-  --surface-luminance:    0.15;
-  --surface-roughness:    0.85;
-  --surface-bg:           oklch(20% 0.022 60);
-  --surface-border:       oklch(35% 0.04 65 / 0.5);
-  --surface-glow:         oklch(65% 0.08 72 / 0.06);
+  /* Permanent. Warm, slightly amber-tinted panel. */
+  --surface-bg:     oklch(88% 0.044 76);
+  --surface-border: oklch(32% 0.025 55 / 0.20);
+  --surface-glow:   oklch(84% 0.070 78 / 0.20);
 }
 
 [data-phase="fluid"] {
-  --surface-weight:       0.5;
-  --surface-permeability: 0.45;
-  --surface-luminance:    0.4;
-  --surface-roughness:    0.5;
-  --surface-bg:           oklch(22% 0.028 63);
-  --surface-border:       oklch(38% 0.05 68 / 0.45);
-  --surface-glow:         oklch(72% 0.10 76 / 0.10);
+  /* Stable. Slightly lichen-tinted. */
+  --surface-bg:     oklch(91% 0.036 82);
+  --surface-border: oklch(50% 0.050 138 / 0.18);
+  --surface-glow:   oklch(80% 0.070 110 / 0.18);
 }
 
 [data-phase="volatile"] {
-  --surface-weight:       0.2;
-  --surface-permeability: 0.8;
-  --surface-luminance:    0.7;
-  --surface-roughness:    0.25;
-  --surface-bg:           oklch(24% 0.038 67);
-  --surface-border:       oklch(48% 0.08 72 / 0.5);
-  --surface-glow:         oklch(82% 0.15 80 / 0.18);
+  /* Still forming. Brightest panel, rose neon bleed. */
+  --surface-bg:     oklch(94% 0.026 84);
+  --surface-border: oklch(58% 0.080 10 / 0.20);
+  --surface-glow:   oklch(75% 0.090 10 / 0.22);
 }
 
-/* Hover — the grain remembers it was alive */
+/* Hover — neon brightens */
 
 [data-phase]:hover,
 [data-phase]:focus-visible {
-  --surface-border: oklch(55% 0.09 74 / 0.6);
+  --surface-glow: oklch(85% 0.080 82 / 0.35);
 }
 
 [data-phase="volatile"]:hover,
 [data-phase="volatile"]:focus-visible {
-  --surface-glow: oklch(85% 0.18 82 / 0.28);
+  --surface-glow:   oklch(75% 0.100 10 / 0.38);
+  --surface-border: oklch(58% 0.100 10 / 0.35);
 }
 
 [data-phase="fluid"]:hover,
 [data-phase="fluid"]:focus-visible {
-  --surface-glow: oklch(76% 0.12 78 / 0.18);
+  --surface-glow: oklch(80% 0.080 120 / 0.32);
 }
 
 [data-phase="salt"]:hover,
 [data-phase="salt"]:focus-visible {
-  --surface-glow: oklch(68% 0.09 74 / 0.12);
+  --surface-glow: oklch(84% 0.080 78 / 0.35);
 }

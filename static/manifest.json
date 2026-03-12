@@ -18,7 +18,8 @@
         "slug": "type-dissolution",
         "affinity": 0.17
       }
-    ]
+    ],
+    "image": null
   },
   {
     "slug": "align",
@@ -43,7 +44,8 @@
         "slug": "rhizome",
         "affinity": 0.33
       }
-    ]
+    ],
+    "image": null
   },
   {
     "slug": "rhizome",
@@ -72,7 +74,8 @@
         "slug": "quantum-context",
         "affinity": 0.33
       }
-    ]
+    ],
+    "image": null
   },
   {
     "slug": "cosmo-sim",
@@ -93,7 +96,8 @@
         "slug": "quantum-context",
         "affinity": 0.33
       }
-    ]
+    ],
+    "image": null
   },
   {
     "slug": "quantum-context",
@@ -122,7 +126,8 @@
         "slug": "type-dissolution",
         "affinity": 0.17
       }
-    ]
+    ],
+    "image": null
   },
   {
     "slug": "type-dissolution",
@@ -154,6 +159,7 @@
         "slug": "quantum-context",
         "affinity": 0.17
       }
-    ]
+    ],
+    "image": null
   }
 ]
