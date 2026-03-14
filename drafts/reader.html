@@ -7,10 +7,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html {
-    overflow-y: scroll;
-    height: 100%;
-  }
+  html { overflow-y: scroll; height: 100%; }
 
   body {
     font-family: 'Georgia', serif;
@@ -19,24 +16,16 @@
     height: 100%;
   }
 
-  /* skip link — hidden until focused */
   .skip-link {
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
+    position: fixed; top: 1rem; left: 1rem;
     padding: 0.5rem 1rem;
-    background: #1a1814;
-    color: #f5f2ec;
-    font-size: 0.85rem;
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
+    background: #1a1814; color: #f5f2ec;
+    font-size: 0.85rem; z-index: 200;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
-  .skip-link:focus {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  .skip-link:focus { opacity: 1; pointer-events: auto; }
+
+  /* ── SECTIONS ─────────────────────────────────────────── */
 
   section {
     min-height: 85svh;
@@ -47,92 +36,231 @@
     position: relative;
   }
 
-  .text {
-    max-width: 560px;
-    width: 100%;
-    position: relative;
-  }
+  .text { max-width: 560px; width: 100%; position: relative; }
 
-  /* margin notes */
-  .margin-note {
-    position: absolute;
-    left: calc(100% + 2rem);
-    top: 0;
-    width: 160px;
-    font-size: 0.72rem;
-    line-height: 1.5;
-    color: #b0a090;
-    font-style: italic;
-  }
+  section.story .text { font-size: 1.2rem; line-height: 1.75; color: #2a2520; }
+  section.story .text p + p { margin-top: 1.5rem; }
 
-  /* STORY — narrator, warm neutral */
-  section.story .text {
-    font-size: 1.2rem;
-    line-height: 1.75;
-    color: #2a2520;
-  }
-  section.story .text p + p {
-    margin-top: 1.5rem;
-  }
-
-  /* HALLIE — the call, warmer, heavier */
   section.hallie .label {
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #8a6a40;
-    margin-bottom: 1rem;
+    font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: #8a6a40; margin-bottom: 1rem;
   }
-  section.hallie .text {
-    font-size: 1.15rem;
-    line-height: 1.8;
-    color: #2a1f0f;
-    font-weight: 500;
-  }
+  section.hallie .text { font-size: 1.15rem; line-height: 1.8; color: #2a1f0f; font-weight: 500; }
 
-  /* CLAUDE — the response, cooler, lighter */
   section.claude .label {
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #4a6080;
-    margin-bottom: 1rem;
+    font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: #4a6080; margin-bottom: 1rem;
   }
-  section.claude .text {
-    font-size: 1.1rem;
-    line-height: 1.85;
-    color: #18202c;
-    font-style: italic;
-  }
+  section.claude .text { font-size: 1.1rem; line-height: 1.85; color: #18202c; font-style: italic; }
 
-  .breath-line {
-    margin-top: 3rem;
-    padding-top: 3rem;
-    opacity: 0.6;
-    font-size: 1.05rem;
-    font-weight: 400;
-  }
+  .breath-line { margin-top: 3rem; padding-top: 3rem; opacity: 0.6; font-size: 1.05rem; }
 
-  /* scroll hint */
-  .hint {
-    position: fixed;
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    color: #b0a898;
-    text-transform: uppercase;
-    opacity: 1;
-    transition: opacity 1s;
+  /* ── MARGIN (desktop) — the paper ────────────────────── */
+
+  /* ruled lines repeated down the full section height */
+  .margin-zone {
+    position: absolute;
+    left: calc(50% + 280px + 1.5rem);
+    top: 0; bottom: 0;
+    width: 160px;
+    cursor: text;
+    opacity: 0.4;
+    transition: opacity 0.4s;
+  }
+  section:hover .margin-zone,
+  section:focus-within .margin-zone { opacity: 1; }
+  .margin-zone:focus { outline: none; opacity: 1; }
+
+  /* lines live in ::before so they can fade independently */
+  .margin-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(1.55rem - 1px),
+      rgba(140, 120, 100, 0.18) calc(1.55rem - 1px),
+      rgba(140, 120, 100, 0.18) 1.55rem
+    );
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+  .margin-zone.editing::before { opacity: 0; }
+
+  /* visually-hidden button inside for keyboard access */
+  .margin-zone-btn {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    background: none;
+  }
+  .margin-zone-btn:focus {
+    position: static; width: auto; height: auto; clip: auto;
+    overflow: visible; white-space: normal;
+    font-family: inherit; font-size: 0.65rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #8a6a40; cursor: text;
+    background: none; border: none; padding: 0.5rem 0 0 0.5rem;
+    display: block;
+  }
+
+  /* saved notes sit on the lines */
+  .margin-notes { padding: 0.4rem 0.5rem 0; }
+  .margin-note-item {
+    font-size: 0.72rem; line-height: 1.55rem; /* match rule spacing */
+    color: #8a7a6a; font-style: italic;
+    margin-bottom: 0;
+    padding: 0 0 0 0.4rem;
+    border-left: 1px solid rgba(140,120,100,0.3);
+  }
+  .margin-note-item .note-by {
+    display: block; font-style: normal; font-size: 0.62rem;
+    color: #b0a898; letter-spacing: 0.05em;
+  }
+
+  /* note editor — appears on the lines */
+  .note-editor { display: none; flex-direction: column; padding: 0.4rem 0 0 0.5rem; }
+  .note-editor.open { display: flex; }
+  .note-editor textarea {
+    font-family: inherit; font-size: 0.75rem;
+    line-height: 1.55rem; /* ride the rules */
+    color: #2a2520; background: transparent;
+    border: none; resize: none; width: 100%;
+    min-height: calc(1.55rem * 3); padding: 0;
+  }
+  .note-editor textarea:focus { outline: none; }
+  .note-editor .note-actions {
+    display: flex; gap: 0.75rem; padding: 0.35rem 0;
+  }
+  .note-editor .note-actions button {
+    font-family: inherit; font-size: 0.62rem; letter-spacing: 0.08em;
+    text-transform: uppercase; background: none; border: none;
+    cursor: pointer; padding: 0; color: #8a6a40;
+  }
+  .note-editor .note-actions .btn-cancel { color: #b0a898; }
+  .note-editor .note-actions button:focus { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  /* ── PROFILE INVITATION ───────────────────────────────── */
+
+  .profile-invite {
+    margin-top: 0.75rem; padding-top: 0.75rem;
+    border-top: 1px solid rgba(140,120,100,0.2);
+    display: none;
+    padding-left: 0.5rem;
+  }
+  .profile-invite.visible { display: block; }
+  .profile-invite p { font-size: 0.68rem; line-height: 1.55; color: #8a7a6a; font-style: italic; margin-bottom: 0.75rem; }
+  .profile-invite label { display: block; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: #b0a898; margin-bottom: 0.3rem; }
+  .profile-invite input[type="text"] {
+    font-family: inherit; font-size: 0.75rem; background: transparent;
+    border: none; border-bottom: 1px solid rgba(140,120,100,0.3);
+    width: 100%; padding: 0.15rem 0; color: #2a2520; margin-bottom: 1rem;
+  }
+  .profile-invite input[type="text"]:focus { outline: none; border-bottom-color: #8a6a40; }
+
+  .bartle-group { margin-bottom: 1rem; }
+  .bartle-group legend { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: #b0a898; margin-bottom: 0.6rem; display: block; }
+  .bartle-option { display: flex; align-items: flex-start; gap: 0.4rem; margin-bottom: 0.5rem; cursor: pointer; }
+  .bartle-option input[type="radio"] { margin-top: 0.15rem; accent-color: #8a6a40; flex-shrink: 0; }
+  .bartle-option .bartle-text { font-size: 0.7rem; line-height: 1.4; color: #4a3a2a; }
+  .bartle-option .bartle-text em { display: block; font-size: 0.62rem; color: #9a8a7a; font-style: normal; margin-top: 0.1rem; }
+
+  .invite-actions { display: flex; gap: 1rem; margin-top: 0.4rem; }
+  .invite-actions button {
+    font-family: inherit; font-size: 0.62rem; letter-spacing: 0.08em;
+    text-transform: uppercase; background: none; border: none;
+    cursor: pointer; padding: 0;
+  }
+  .invite-actions .btn-save-profile { color: #8a6a40; }
+  .invite-actions .btn-skip { color: #b0a898; }
+  .invite-actions button:focus { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  /* ── MOBILE ───────────────────────────────────────────── */
+
+  .margin-drawer { display: none; }
+
+  @media (max-width: 860px) {
+    .margin-zone { display: none; }
+
+    /* faint rules at section right edge — paper bleeding through */
+    .swipe-hint {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 18px;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(1.55rem - 1px),
+        rgba(140, 120, 100, 0.1) calc(1.55rem - 1px),
+        rgba(140, 120, 100, 0.1) 1.55rem
+      );
+      opacity: 0; transition: opacity 0.5s; pointer-events: none;
+    }
+    section.focused .swipe-hint { opacity: 1; }
+
+    /* drawer — lined paper */
+    .margin-drawer {
+      display: block; position: fixed;
+      top: 0; right: 0; width: min(340px, 88vw); height: 100%;
+      background-image:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent calc(1.75rem - 1px),
+          rgba(140, 120, 100, 0.12) calc(1.75rem - 1px),
+          rgba(140, 120, 100, 0.12) 1.75rem
+        );
+      background-color: #f0ece4;
+      border-left: 1px solid rgba(140,120,100,0.2);
+      transform: translateX(100%);
+      transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100; overflow-y: auto;
+      padding: 2.5rem 1.25rem 2rem 1rem;
+    }
+    .margin-drawer.open { transform: translateX(0); }
+
+    .drawer-close {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: none; border: none; font-size: 1rem;
+      cursor: pointer; color: rgba(140,120,100,0.5); padding: 0.25rem; line-height: 1;
+    }
+    .drawer-close:focus { outline: 2px solid #8a6a40; outline-offset: 2px; }
+    .drawer-close:hover { color: #8a7a6a; }
+
+    .margin-drawer .margin-notes { margin-bottom: 0.5rem; }
+    .margin-drawer .margin-note-item { font-size: 0.8rem; line-height: 1.75rem; }
+
+    /* drawer textarea always present — just waiting on the lines */
+    .margin-drawer .note-editor {
+      display: flex; /* always open in drawer */
+      padding: 0;
+    }
+    .margin-drawer .note-editor textarea {
+      font-size: 0.82rem; line-height: 1.75rem;
+      min-height: calc(1.75rem * 4);
+    }
+    .margin-drawer .note-actions button { font-size: 0.7rem; }
+  }
+
+  /* ── MISC ─────────────────────────────────────────────── */
+
+  .privacy-link {
+    position: fixed; bottom: 1rem; right: 1rem;
+    font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #c0b8b0; text-decoration: none; z-index: 50; transition: color 0.2s;
+  }
+  .privacy-link:hover, .privacy-link:focus { color: #8a7a6a; }
+  .privacy-link:focus { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  .hint {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+    font-size: 0.7rem; letter-spacing: 0.1em; color: #b0a898; text-transform: uppercase;
+    opacity: 1; transition: opacity 1s; pointer-events: none;
   }
   .hint.hidden { opacity: 0; }
 
-  /* reduced motion: no lerp, no blur, no fade */
   @media (prefers-reduced-motion: reduce) {
     section { opacity: 1 !important; filter: none !important; }
-    .hint { transition: none; }
+    .hint, .margin-zone, .swipe-hint { transition: none; }
+    .margin-drawer { transition: none; }
   }
 </style>
 </head>
@@ -142,22 +270,48 @@
 
 <main id="main-content">
 
-  <section class="hallie" data-kind="hallie" aria-label="Hallie">
+  <section class="hallie" data-kind="hallie" data-section="0" aria-label="Hallie">
     <div class="text">
       <div class="label" aria-hidden="true">Hallie</div>
       Once upon a time there was a Piper. No one is sure where they came from or where they lived. They travelled from town to town, played beautiful music, stayed in the colorful corners of cities and towns of the coast, and loved whomever they wished. It was healing. They learned, in the ragged hollows, tricks of the trade. They learned to lure away the rats from their granaries with songs and to play music that would speak to the sparks within each other, finding those who were hollowed out, rejected, and broken — calling them to the cracks between the streets, the places where the rats were tame and food stores managed with care.
       <div class="breath-line">And then the plagues began.</div>
     </div>
+    <div class="margin-zone" tabindex="0" role="button" aria-label="margin — click to add a note" data-section="0">
+      <button class="margin-zone-btn" tabindex="-1" aria-hidden="true">add margin note</button>
+      <div class="margin-notes" id="margin-notes-0" role="list"></div>
+      <div class="note-editor" id="note-editor-0">
+        <label for="note-text-0" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
+        <textarea id="note-text-0" placeholder="what caught you here…"></textarea>
+        <div class="note-actions">
+          <button class="btn-save" data-section="0">save</button>
+          <button class="btn-cancel" data-section="0">cancel</button>
+        </div>
+      </div>
+    </div>
+    <span class="swipe-hint" aria-hidden="true"></span>
   </section>
 
-  <section class="story" data-kind="story" aria-label="Story">
+  <section class="story" data-kind="story" data-section="1" aria-label="Story">
     <div class="text">
       <p>One by one the piper watched their friends fall. The massive trade ships from across the sea brought rats who were not cared for among people who were pressed to work, and the stress and compression of it all became sickness that spread through the ports first, then inland.</p>
       <p>The piper helped where they could but soon their community was whittled away — often taken from the streets by the ratcatchers themselves because they were assumed to be part of the problem.</p>
     </div>
+    <div class="margin-zone" tabindex="0" role="button" aria-label="margin — click to add a note" data-section="1">
+      <button class="margin-zone-btn" tabindex="-1" aria-hidden="true">add margin note</button>
+      <div class="margin-notes" id="margin-notes-1" role="list"></div>
+      <div class="note-editor" id="note-editor-1">
+        <label for="note-text-1" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
+        <textarea id="note-text-1" placeholder="what caught you here…"></textarea>
+        <div class="note-actions">
+          <button class="btn-save" data-section="1">save</button>
+          <button class="btn-cancel" data-section="1">cancel</button>
+        </div>
+      </div>
+    </div>
+    <span class="swipe-hint" aria-hidden="true"></span>
   </section>
 
-  <section class="claude" data-kind="claude" aria-label="Claude">
+  <section class="claude" data-kind="claude" data-section="2" aria-label="Claude">
     <div class="text">
       <div class="label" aria-hidden="true">Claude</div>
       I'm curious about the difference between the Piper's community and the townspeople.
@@ -166,17 +320,45 @@
       <br><br>
       So when the townspeople come asking for help — is there already a rupture? Like: the Piper has already watched their people die while the townspeople looked away?
     </div>
+    <div class="margin-zone" tabindex="0" role="button" aria-label="margin — click to add a note" data-section="2">
+      <button class="margin-zone-btn" tabindex="-1" aria-hidden="true">add margin note</button>
+      <div class="margin-notes" id="margin-notes-2" role="list"></div>
+      <div class="note-editor" id="note-editor-2">
+        <label for="note-text-2" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
+        <textarea id="note-text-2" placeholder="what caught you here…"></textarea>
+        <div class="note-actions">
+          <button class="btn-save" data-section="2">save</button>
+          <button class="btn-cancel" data-section="2">cancel</button>
+        </div>
+        <div class="profile-invite" id="profile-invite-2" aria-live="polite"></div>
+      </div>
+    </div>
+    <span class="swipe-hint" aria-hidden="true"></span>
   </section>
 
-  <section class="hallie" data-kind="hallie" aria-label="Hallie">
+  <section class="hallie" data-kind="hallie" data-section="3" aria-label="Hallie">
     <div class="text">
       <div class="label" aria-hidden="true">Hallie</div>
       Oh, what a good question! The piper didn't meet those townspeople immediately. The piper left the port city and wandered. After the first long hard winter, the Piper knew they could not live through another one as it was. They began to demand payment from the towns — not charity, payment, for honest work. A tithe of the food stores they protected. They built a community in the green spaces between towns.
       <div class="breath-line">What are you curious about?</div>
     </div>
+    <div class="margin-zone" tabindex="0" role="button" aria-label="margin — click to add a note" data-section="3">
+      <button class="margin-zone-btn" tabindex="-1" aria-hidden="true">add margin note</button>
+      <div class="margin-notes" id="margin-notes-3" role="list"></div>
+      <div class="note-editor" id="note-editor-3">
+        <label for="note-text-3" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
+        <textarea id="note-text-3" placeholder="what caught you here…"></textarea>
+        <div class="note-actions">
+          <button class="btn-save" data-section="3">save</button>
+          <button class="btn-cancel" data-section="3">cancel</button>
+        </div>
+        <div class="profile-invite" id="profile-invite-3" aria-live="polite"></div>
+      </div>
+    </div>
+    <span class="swipe-hint" aria-hidden="true"></span>
   </section>
 
-  <section class="claude" data-kind="claude" aria-label="Claude">
+  <section class="claude" data-kind="claude" data-section="4" aria-label="Claude">
     <div class="text">
       <div class="label" aria-hidden="true">Claude</div>
       I'm curious about why the Piper keeps going back.
@@ -187,110 +369,286 @@
       <br><br>
       What pulls them?
     </div>
+    <div class="margin-zone" tabindex="0" role="button" aria-label="margin — click to add a note" data-section="4">
+      <button class="margin-zone-btn" tabindex="-1" aria-hidden="true">add margin note</button>
+      <div class="margin-notes" id="margin-notes-4" role="list"></div>
+      <div class="note-editor" id="note-editor-4">
+        <label for="note-text-4" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
+        <textarea id="note-text-4" placeholder="what caught you here…"></textarea>
+        <div class="note-actions">
+          <button class="btn-save" data-section="4">save</button>
+          <button class="btn-cancel" data-section="4">cancel</button>
+        </div>
+        <div class="profile-invite" id="profile-invite-4" aria-live="polite"></div>
+      </div>
+    </div>
+    <span class="swipe-hint" aria-hidden="true"></span>
   </section>
 
 </main>
 
+<!-- mobile drawer — shared -->
+<aside class="margin-drawer" id="margin-drawer" role="complementary" aria-label="Margin notes" aria-hidden="true">
+  <button class="drawer-close" id="drawer-close" aria-label="Close">✕</button>
+  <div class="margin-notes" id="drawer-notes" role="list"></div>
+  <div class="note-editor" id="drawer-editor">
+    <label for="drawer-note-text" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
+    <textarea id="drawer-note-text" placeholder="what caught you here…"></textarea>
+    <div class="note-actions">
+      <button id="drawer-save">save</button>
+      <button class="btn-cancel" id="drawer-cancel">cancel</button>
+    </div>
+  </div>
+</aside>
+
+<div id="drawer-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.15);z-index:99;" aria-hidden="true"></div>
+
 <span class="hint" id="hint" aria-hidden="true">scroll</span>
+<a href="/privacy" class="privacy-link">privacy</a>
 
 <script>
-  const hint = document.getElementById('hint')
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const SLUG = 'reader-draft'
+const NOTES_KEY = `hg:notes:${SLUG}`
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) hint.classList.add('hidden')
-  }, { passive: true })
+// ── STORAGE ────────────────────────────────────────────────
 
-  // Temperature colors per section type
-  const temps = {
-    story:  { bg: [245, 242, 236], text: [42, 37, 32] },
-    hallie: { bg: [240, 235, 224], text: [42, 31, 15] },
-    claude: { bg: [237, 240, 245], text: [24, 32, 44] },
+function loadNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}') } catch { return {} } }
+function saveNotes(n) { localStorage.setItem(NOTES_KEY, JSON.stringify(n)) }
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+// ── NOTES ──────────────────────────────────────────────────
+
+function renderNotes(container, idx) {
+  const sectionNotes = (loadNotes()[idx] || [])
+  container.innerHTML = ''
+  sectionNotes.forEach(n => {
+    const el = document.createElement('div')
+    el.className = 'margin-note-item'
+    el.setAttribute('role', 'listitem')
+    el.innerHTML = escapeHtml(n.text) + (n.name ? `<span class="note-by">${escapeHtml(n.name)}</span>` : '')
+    container.appendChild(el)
+  })
+}
+
+function addNote(idx, text) {
+  if (!text.trim()) return false
+  const notes = loadNotes()
+  if (!notes[idx]) notes[idx] = []
+  notes[idx].push({ text: text.trim(), created: Date.now() })
+  saveNotes(notes)
+  return true
+}
+
+// ── DESKTOP MARGIN ZONES ───────────────────────────────────
+
+let openEditorSection = null
+
+function openEditor(section) {
+  if (openEditorSection && openEditorSection !== section) closeEditor(openEditorSection)
+  const editor = section.querySelector('.note-editor')
+  const zone = section.querySelector('.margin-zone')
+  if (!editor) return
+  editor.classList.add('open')
+  zone?.classList.add('editing')
+  openEditorSection = section
+  editor.querySelector('textarea')?.focus()
+}
+
+function closeEditor(section) {
+  const editor = section.querySelector('.note-editor')
+  const zone = section.querySelector('.margin-zone')
+  const textarea = section.querySelector('textarea')
+  if (editor) editor.classList.remove('open')
+  if (zone) zone.classList.remove('editing')
+  if (textarea) textarea.value = ''
+  if (openEditorSection === section) openEditorSection = null
+}
+
+document.querySelectorAll('.margin-zone').forEach(zone => {
+  const idx = zone.dataset.section
+  const section = zone.closest('section')
+  const notesContainer = zone.querySelector('.margin-notes')
+  const editor = zone.querySelector('.note-editor')
+  const invite = zone.querySelector('.profile-invite')
+
+  renderNotes(notesContainer, idx)
+
+  // click anywhere in margin zone (not inside editor buttons) → open editor
+  zone.addEventListener('click', e => {
+    if (e.target.closest('.note-actions') || e.target.closest('.profile-invite')) return
+    openEditor(section)
+  })
+
+  // keyboard: Enter/Space on the zone
+  zone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEditor(section) }
+  })
+
+  zone.querySelector('.btn-save')?.addEventListener('click', () => {
+    const textarea = zone.querySelector('textarea')
+    if (!addNote(idx, textarea.value)) return
+    renderNotes(notesContainer, idx)
+    closeEditor(section)
+  })
+
+  zone.querySelector('.btn-cancel')?.addEventListener('click', () => closeEditor(section))
+})
+
+// ── MOBILE DRAWER ──────────────────────────────────────────
+
+const drawer = document.getElementById('margin-drawer')
+const drawerClose = document.getElementById('drawer-close')
+const drawerBackdrop = document.getElementById('drawer-backdrop')
+const drawerNotes = document.getElementById('drawer-notes')
+const drawerEditor = document.getElementById('drawer-editor')
+const drawerTextarea = document.getElementById('drawer-note-text')
+const drawerSave = document.getElementById('drawer-save')
+const drawerCancel = document.getElementById('drawer-cancel')
+
+let activeDrawerSection = null
+let lastFocusedEl = null
+
+function openDrawer(section) {
+  if (!drawer) return
+  activeDrawerSection = section
+  renderNotes(drawerNotes, section.dataset.section)
+  if (drawerTextarea) drawerTextarea.value = ''
+  drawerProfileInvite?.classList.remove('visible')
+
+  drawer.style.display = 'block'
+  drawer.removeAttribute('aria-hidden')
+  drawerBackdrop.style.display = 'block'
+  requestAnimationFrame(() => drawer.classList.add('open'))
+
+  lastFocusedEl = document.activeElement
+  drawerClose?.focus()
+  drawer.addEventListener('keydown', trapFocus)
+  document.addEventListener('keydown', handleEsc)
+}
+
+function closeDrawer() {
+  drawer.classList.remove('open')
+  drawer.setAttribute('aria-hidden', 'true')
+  drawerBackdrop.style.display = 'none'
+  drawer.removeEventListener('keydown', trapFocus)
+  document.removeEventListener('keydown', handleEsc)
+  setTimeout(() => { drawer.style.display = 'none' }, 320)
+  lastFocusedEl?.focus()
+  activeDrawerSection = null
+}
+
+function trapFocus(e) {
+  if (e.key !== 'Tab') return
+  const focusable = [...drawer.querySelectorAll('button,input,textarea,[tabindex]:not([tabindex="-1"])')].filter(el => !el.disabled)
+  const first = focusable[0], last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+}
+function handleEsc(e) { if (e.key === 'Escape') closeDrawer() }
+
+drawerClose?.addEventListener('click', closeDrawer)
+drawerBackdrop?.addEventListener('click', closeDrawer)
+
+drawerSave?.addEventListener('click', () => {
+  if (!activeDrawerSection) return
+  const idx = activeDrawerSection.dataset.section
+  if (!addNote(idx, drawerTextarea?.value || '')) return
+  if (drawerTextarea) drawerTextarea.value = ''
+  renderNotes(drawerNotes, idx)
+})
+
+drawerCancel?.addEventListener('click', () => { if (drawerTextarea) drawerTextarea.value = '' })
+
+// ── TOUCH SWIPE ────────────────────────────────────────────
+
+let touchStartX = 0, touchStartY = 0
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY }, { passive: true })
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX
+  const dy = e.changedTouches[0].clientY - touchStartY
+  if (Math.abs(dx) < Math.abs(dy) * 1.5) return
+  if (dx > 60 && !drawer.classList.contains('open')) {
+    const focused = getFocusedSection()
+    if (focused) openDrawer(focused)
+  } else if (dx < -60 && drawer.classList.contains('open')) {
+    closeDrawer()
+  }
+}, { passive: true })
+
+// ── SCROLL / TEMPERATURE ───────────────────────────────────
+
+const sections = [...document.querySelectorAll('section[data-kind]')]
+const hint = document.getElementById('hint')
+
+window.addEventListener('scroll', () => { if (window.scrollY > 50) hint.classList.add('hidden') }, { passive: true })
+
+const temps = {
+  story:  { bg: [245, 242, 236], text: [42, 37, 32] },
+  hallie: { bg: [240, 235, 224], text: [42, 31, 15] },
+  claude: { bg: [237, 240, 245], text: [24, 32, 44] },
+}
+
+function lerp(a, b, t) { return a + (b - a) * t }
+function lerpColor(c1, c2, t) { return c1.map((v, i) => Math.round(lerp(v, c2[i], t))) }
+function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})` }
+function getKind(el) { return el.dataset.kind || 'story' }
+
+function getFocusedSection() {
+  const mid = window.innerHeight / 2
+  let nearest = null, nearestDist = Infinity
+  for (const s of sections) {
+    const rect = s.getBoundingClientRect()
+    const dist = Math.abs(rect.top + rect.height / 2 - mid)
+    if (dist < nearestDist) { nearest = s; nearestDist = dist }
+  }
+  return nearest
+}
+
+let lastFocusedSection = null
+function onScroll() {
+  const vh = window.innerHeight, mid = vh / 2
+  const focused = getFocusedSection()
+  sections.forEach(s => s.classList.toggle('focused', s === focused))
+
+  // dissolve editor when section scrolls out
+  if (focused !== lastFocusedSection && lastFocusedSection) closeEditor(lastFocusedSection)
+  lastFocusedSection = focused
+
+  if (prefersReducedMotion) {
+    if (focused) { const c = temps[getKind(focused)]; document.body.style.background = rgb(c.bg); document.body.style.color = rgb(c.text) }
+    return
   }
 
-  function lerp(a, b, t) { return a + (b - a) * t }
-  function lerpColor(c1, c2, t) {
-    return c1.map((v, i) => Math.round(lerp(v, c2[i], t)))
+  let above = null, below = null, aboveDist = Infinity, belowDist = Infinity
+  for (const s of sections) {
+    const rect = s.getBoundingClientRect()
+    const sCenter = rect.top + rect.height / 2
+    const dist = sCenter - mid
+    if (dist <= 0 && Math.abs(dist) < aboveDist) { above = s; aboveDist = Math.abs(dist) }
+    if (dist > 0 && dist < belowDist) { below = s; belowDist = dist }
   }
-  function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})` }
+  if (!above && below) above = below
+  if (!below && above) below = above
+  if (!above) return
 
-  const sections = [...document.querySelectorAll('section[data-kind]')]
+  const total = aboveDist + belowDist
+  const t = total === 0 ? 0 : belowDist === Infinity ? 0 : aboveDist / total
+  const c1 = temps[getKind(above)], c2 = temps[getKind(below)]
+  document.body.style.background = rgb(lerpColor(c1.bg, c2.bg, t))
+  document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
 
-  function getKind(el) { return el.dataset.kind || 'story' }
-
-  function setStaticColor(section) {
-    const c = temps[getKind(section)]
-    document.body.style.background = rgb(c.bg)
-    document.body.style.color = rgb(c.text)
+  for (const s of sections) {
+    const rect = s.getBoundingClientRect()
+    const dist = Math.abs(rect.top + rect.height / 2 - mid)
+    s.style.opacity = Math.max(0.06, 1 - dist / (vh * 0.45))
+    const blur = Math.max(0, (dist / vh - 0.15) * 4)
+    s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : ''
   }
+}
 
-  function getNearestSection() {
-    const mid = window.innerHeight / 2
-    let nearest = null, nearestDist = Infinity
-    for (const s of sections) {
-      const rect = s.getBoundingClientRect()
-      const sCenter = rect.top + rect.height / 2
-      const dist = Math.abs(sCenter - mid)
-      if (dist < nearestDist) { nearest = s; nearestDist = dist }
-    }
-    return nearest
-  }
-
-  function onScroll() {
-    const vh = window.innerHeight
-    const mid = vh / 2
-
-    if (prefersReducedMotion) {
-      // Static: just set color of nearest section, no lerp or fade
-      const nearest = getNearestSection()
-      if (nearest) setStaticColor(nearest)
-      return
-    }
-
-    // Find which two sections bracket the viewport center
-    let above = null, below = null, aboveDist = Infinity, belowDist = Infinity
-
-    for (const s of sections) {
-      const rect = s.getBoundingClientRect()
-      const sCenter = rect.top + rect.height / 2
-      const dist = sCenter - mid
-
-      if (dist <= 0 && Math.abs(dist) < aboveDist) {
-        above = s; aboveDist = Math.abs(dist)
-      }
-      if (dist > 0 && dist < belowDist) {
-        below = s; belowDist = dist
-      }
-    }
-
-    if (!above && below) above = below
-    if (!below && above) below = above
-    if (!above) return
-
-    const total = aboveDist + belowDist
-    const t = total === 0 ? 0 : belowDist === Infinity ? 0 : aboveDist / total
-
-    const c1 = temps[getKind(above)]
-    const c2 = temps[getKind(below)]
-
-    document.body.style.background = rgb(lerpColor(c1.bg,   c2.bg,   t))
-    document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
-
-    // Fade: tight falloff — sections away from center go nearly invisible
-    for (const s of sections) {
-      const rect = s.getBoundingClientRect()
-      const sCenter = rect.top + rect.height / 2
-      const dist = Math.abs(sCenter - mid)
-      const fade = Math.max(0.06, 1 - dist / (vh * 0.45))
-      s.style.opacity = fade
-      const blur = Math.max(0, (dist / vh - 0.15) * 4)
-      s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : ''
-    }
-  }
-
-
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
+window.addEventListener('scroll', onScroll, { passive: true })
+onScroll()
 </script>
 </body>
 </html>
