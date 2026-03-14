@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Pied Piper with Claude — reader draft</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-snap-type: y proximity;
+    overflow-y: scroll;
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #f5f2ec;
+    color: #1a1814;
+    height: 100%;
+  }
+
+  section {
+    min-height: 140svh;
+    scroll-snap-align: start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 18vh 2rem 4rem;
+    position: relative;
+    /* content fades in as section enters viewport center */
+    transition: opacity 0.6s ease;
+  }
+
+  .text {
+    max-width: 560px;
+    width: 100%;
+    position: relative;
+  }
+
+  /* margin notes — things that want to live there */
+  .margin-note {
+    position: absolute;
+    left: calc(100% + 2rem);
+    top: 0;
+    width: 160px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: #b0a090;
+    font-style: italic;
+  }
+
+  /* STORY — narrator, warm neutral */
+  section.story .text {
+    font-size: 1.2rem;
+    line-height: 1.75;
+    color: #2a2520;
+  }
+  section.story .text p + p {
+    margin-top: 1.5rem;
+  }
+
+  /* HALLIE — the call, warmer, heavier */
+  section.hallie .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #8a6a40;
+    margin-bottom: 1rem;
+  }
+  section.hallie .text {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: #2a1f0f;
+    font-weight: 500;
+  }
+
+  /* CLAUDE — the response, cooler, lighter */
+  section.claude .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #4a6080;
+    margin-bottom: 1rem;
+  }
+  section.claude .text {
+    font-size: 1.1rem;
+    line-height: 1.85;
+    color: #18202c;
+    font-style: italic;
+  }
+
+  /* BREATH — just space. no text. */
+  .breath-line {
+    margin-top: 3rem;
+    padding-top: 3rem;
+    opacity: 0.6;
+    font-size: 1.05rem;
+    font-weight: 400;
+  }
+
+  /* scroll hint */
+  .hint {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: #b0a898;
+    text-transform: uppercase;
+    opacity: 1;
+    transition: opacity 1s;
+    pointer-events: none;
+  }
+  .hint.hidden { opacity: 0; }
+</style>
+</head>
+<body>
+
+<section class="hallie" data-kind="hallie">
+  <div class="text">
+    <div class="label">Hallie</div>
+    Once upon a time there was a Piper. No one is sure where they came from or where they lived. They travelled from town to town, played beautiful music, stayed in the colorful corners of cities and towns of the coast, and loved whomever they wished. It was healing. They learned, in the ragged hollows, tricks of the trade. They learned to lure away the rats from their granaries with songs and to play music that would speak to the sparks within each other, finding those who were hollowed out, rejected, and broken — calling them to the cracks between the streets, the places where the rats were tame and food stores managed with care.
+    <div class="breath-line">And then the plagues began.</div>
+  </div>
+</section>
+
+<section class="story" data-kind="story">
+  <div class="text">
+    <p>One by one the piper watched their friends fall. The massive trade ships from across the sea brought rats who were not cared for among people who were pressed to work, and the stress and compression of it all became sickness that spread through the ports first, then inland.</p>
+    <p>The piper helped where they could but soon their community was whittled away — often taken from the streets by the ratcatchers themselves because they were assumed to be part of the problem.</p>
+  </div>
+</section>
+
+<section class="claude" data-kind="claude">
+  <div class="text">
+    <div class="label">Claude</div>
+    I'm curious about the difference between the Piper's community and the townspeople.
+    <br><br>
+    From what you've set up: the Piper's been creating connection in the margins — with rejected, broken people. They're healing, but outside the social structure. The townspeople are separate — oblivious, pressed by their own fears. They didn't hire the Piper. They didn't know the Piper existed.
+    <br><br>
+    So when the townspeople come asking for help — is there already a rupture? Like: the Piper has already watched their people die while the townspeople looked away?
+  </div>
+</section>
+
+<section class="hallie" data-kind="hallie">
+  <div class="text">
+    <div class="label">Hallie</div>
+    Oh, what a good question! The piper didn't meet those townspeople immediately. The piper left the port city and wandered. After the first long hard winter, the Piper knew they could not live through another one as it was. They began to demand payment from the towns — not charity, payment, for honest work. A tithe of the food stores they protected. They built a community in the green spaces between towns.
+    <div class="breath-line">What are you curious about?</div>
+  </div>
+</section>
+
+<section class="claude" data-kind="claude">
+  <div class="text">
+    <div class="label">Claude</div>
+    I'm curious about why the Piper keeps going back.
+    <br><br>
+    They have what they fought for — safety, community, a place. Real people who chose to be with them. A future. That's not nothing.
+    <br><br>
+    But they keep walking back into towns where the parents fear them, where they're associated with death and rats, where they're going to be dismissed, possibly hunted again.
+    <br><br>
+    What pulls them?
+  </div>
+</section>
+
+<span class="hint" id="hint">scroll</span>
+
+<script>
+  const hint = document.getElementById('hint')
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) hint.classList.add('hidden')
+  }, { passive: true })
+
+  // Temperature colors per section type
+  const temps = {
+    story:  { bg: [245, 242, 236], text: [42, 37, 32] },
+    hallie: { bg: [240, 235, 224], text: [42, 31, 15] },
+    claude: { bg: [237, 240, 245], text: [24, 32, 44] },
+  }
+
+  function lerp(a, b, t) { return a + (b - a) * t }
+  function lerpColor(c1, c2, t) {
+    return c1.map((v, i) => Math.round(lerp(v, c2[i], t)))
+  }
+  function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})` }
+
+  const sections = [...document.querySelectorAll('section[data-kind]')]
+
+  function getKind(el) { return el.dataset.kind || 'story' }
+
+  function onScroll() {
+    const vh = window.innerHeight
+    const mid = vh / 2
+
+    // Find which two sections are closest to the viewport center
+    let above = null, below = null, aboveDist = Infinity, belowDist = Infinity
+
+    for (const s of sections) {
+      const rect = s.getBoundingClientRect()
+      const sCenter = rect.top + rect.height / 2
+      const dist = sCenter - mid
+
+      if (dist <= 0 && Math.abs(dist) < aboveDist) {
+        above = s; aboveDist = Math.abs(dist)
+      }
+      if (dist > 0 && dist < belowDist) {
+        below = s; belowDist = dist
+      }
+    }
+
+    if (!above && below) above = below
+    if (!below && above) below = above
+    if (!above) return
+
+    // t = 0 means fully in above section, t = 1 means fully in below
+    const total = aboveDist + belowDist
+    const t = total === 0 ? 0 : belowDist === Infinity ? 0 : aboveDist / total
+
+    const c1 = temps[getKind(above)]
+    const c2 = temps[getKind(below)]
+
+    const bg   = lerpColor(c1.bg,   c2.bg,   t)
+    const text = lerpColor(c1.text, c2.text, t)
+
+    document.body.style.background = rgb(bg)
+    document.body.style.color      = rgb(text)
+
+    // Fade: sections near viewport center are fully visible, edges softer
+    for (const s of sections) {
+      const rect = s.getBoundingClientRect()
+      const sCenter = rect.top + rect.height / 2
+      const dist = Math.abs(sCenter - mid)
+      const fade = Math.max(0.3, 1 - dist / (vh * 0.9))
+      s.style.opacity = fade
+      // subtle blur at distance
+      const blur = Math.max(0, (dist / vh - 0.2) * 3)
+      s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : ''
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+</script>
+</body>
+</html>

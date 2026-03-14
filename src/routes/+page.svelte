@@ -1,146 +1,89 @@
 <script lang="ts">
-  import type { ManifestItem } from '$lib/types';
-  import Card from '$lib/components/Card.svelte';
-
-  let { data } = $props();
-  let featured: ManifestItem[] = $derived(data.manifest.filter((i: ManifestItem) => i.section === 'work').slice(0, 3));
+  import type { PageData } from './$types'
+  let { data }: { data: PageData } = $props()
 </script>
 
 <svelte:head>
-  <title>hallie larsson</title>
-  <meta name="description" content="Hallie Larsson — builder of games, tools, and substrates." />
+  <title>hallie grows</title>
 </svelte:head>
 
-<section class="landing" aria-labelledby="site-headline">
-  <div class="headline-block">
-    <h1 id="site-headline" class="headline">
-      hallie larsson
-    </h1>
-    <p class="subhead">
-      builder of games, tools, and substrates.<br />
-      the material knows what it wants to be.
-    </p>
-  </div>
-
-  <div class="nav-phase-key" aria-label="phase key">
-    <dl>
-      <div>
-        <dt><span aria-hidden="true">◆</span> salt</dt>
-        <dd>shipped. solid. permanent.</dd>
-      </div>
-      <div>
-        <dt><span aria-hidden="true">◈</span> fluid</dt>
-        <dd>flowing. stable until broken.</dd>
-      </div>
-      <div>
-        <dt><span aria-hidden="true">◇</span> volatile</dt>
-        <dd>always re-precipitating.</dd>
-      </div>
-    </dl>
-  </div>
-</section>
-
-{#if featured.length}
-  <section class="featured" aria-labelledby="featured-heading">
-    <h2 id="featured-heading" class="section-label">selected work</h2>
-    <ul class="card-grid" role="list">
-      {#each featured as item}
+{#if data.surface.length > 0}
+  <section class="surface">
+    <h2>right now</h2>
+    <ul>
+      {#each data.surface as item}
         <li>
-          <Card {item} />
+          <a href="/{item.kind === 'post' ? 'writing' : item.kind}/{item.slug}">
+            {item.title}
+          </a>
+          <span class="kind">{item.kind}</span>
         </li>
       {/each}
     </ul>
-    <a href="/work" class="see-all">all work →</a>
   </section>
 {/if}
 
+{#if data.posts.length > 0}
+  <section>
+    <h2><a href="/writing">writing</a></h2>
+    <ul>
+      {#each data.posts as post}
+        <li>
+          <a href="/writing/{post.slug}">{post.title}</a>
+          <time>{post.date.slice(0, 10)}</time>
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+
+{#if data.explainers.length > 0}
+  <section>
+    <h2><a href="/explainers">explainers</a></h2>
+    <ul>
+      {#each data.explainers as e}
+        <li>
+          <a href="/explainers/{e.slug}">{e.title}</a>
+          <time>{e.date.slice(0, 10)}</time>
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+
+{#if data.work.length > 0}
+  <section>
+    <h2><a href="/work">work</a></h2>
+    <ul>
+      {#each data.work as w}
+        <li>
+          <a href="/work/{w.slug}">{w.title}</a>
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+
+{#if data.posts.length === 0 && data.explainers.length === 0 && data.work.length === 0}
+  <p class="empty">the graph is empty. add content via the MCP interface.</p>
+{/if}
+
 <style>
-  .landing {
-    padding: var(--space-16) 0 var(--space-16);
+  section { margin-bottom: 3rem; }
+  h2 { margin-bottom: 0.75rem; }
+  h2 a { text-decoration: none; color: inherit; }
+  ul { list-style: none; padding: 0; }
+  li {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-12);
-  }
-
-  .headline {
-    font-size: clamp(2.5rem, 6vw, var(--size-3xl));
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-  }
-
-  .subhead {
-    margin-top: var(--space-4);
-    font-size: var(--size-lg);
-    color: var(--text-secondary);
-    line-height: var(--leading-loose);
-    font-style: italic;
-    max-width: 44ch;
-  }
-
-  .nav-phase-key {
-    max-width: 36rem;
-  }
-
-  .nav-phase-key dl {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .nav-phase-key div {
-    display: flex;
-    gap: var(--space-8);
+    justify-content: space-between;
     align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border, #eee);
+    gap: 1rem;
   }
-
-  .nav-phase-key dt {
-    font-family: var(--font-mono);
-    font-size: var(--size-xs);
-    letter-spacing: 0.06em;
-    color: var(--amber-dim);
-    min-width: 7ch;
-  }
-
-  .nav-phase-key dd {
-    font-size: var(--size-sm);
-    color: var(--text-dim);
-    font-style: italic;
-  }
-
-  .featured {
-    padding-bottom: var(--space-16);
-  }
-
-  .section-label {
-    font-family: var(--font-ui);
-    font-size: var(--size-xs);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    font-weight: 400;
-    margin-bottom: var(--space-6);
-  }
-
-  .card-grid {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-    gap: var(--space-8);
-  }
-
-  .see-all {
-    display: inline-block;
-    margin-top: var(--space-6);
-    font-family: var(--font-ui);
-    font-size: var(--size-sm);
-    letter-spacing: 0.04em;
-    color: var(--text-dim);
-  }
-
-  .see-all:hover {
-    color: var(--amber);
-    border-bottom-color: transparent;
-  }
+  li a { text-decoration: none; }
+  li a:hover { text-decoration: underline; }
+  time, .kind { font-size: 0.8rem; opacity: 0.5; white-space: nowrap; }
+  .surface { margin-bottom: 3rem; }
+  .empty { opacity: 0.4; font-style: italic; }
 </style>

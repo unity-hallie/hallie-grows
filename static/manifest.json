@@ -2,7 +2,7 @@
   {
     "slug": "jamestown",
     "title": "Jamestown",
-    "description": "Bullet hell shooter set in colonial Mars. Shipped on Steam.",
+    "description": "Neoclassical scrolling shooter set on British colonial Mars. PAX 10, Cooptimus PC Game of the Year. 81 Metacritic, 94% Steam.",
     "tags": [
       "game",
       "shipped",
@@ -13,18 +13,12 @@
     "year": 2011,
     "phase": "salt",
     "section": "work",
-    "relations": [
-      {
-        "slug": "type-dissolution",
-        "affinity": 0.17
-      }
-    ],
-    "image": null
+    "relations": []
   },
   {
     "slug": "align",
     "title": "Align",
-    "description": "Trauma-informed Socratic learning platform. Salesforce-integrated.",
+    "description": "Trauma-informed Socratic learning platform. Built for Unity Environmental University.",
     "tags": [
       "education",
       "svelte",
@@ -35,131 +29,17 @@
     "year": 2024,
     "phase": "fluid",
     "section": "work",
-    "relations": [
-      {
-        "slug": "type-dissolution",
-        "affinity": 0.4
-      },
-      {
-        "slug": "rhizome",
-        "affinity": 0.33
-      }
-    ],
-    "image": null
+    "relations": []
   },
   {
-    "slug": "rhizome",
-    "title": "Rhizome",
-    "description": "Graph-native knowledge substrate. Edges as first-class citizens.",
-    "tags": [
-      "graph",
-      "knowledge",
-      "systems",
-      "typescript"
-    ],
-    "url": null,
-    "year": 2025,
-    "phase": "fluid",
-    "section": "work",
-    "relations": [
-      {
-        "slug": "type-dissolution",
-        "affinity": 0.4
-      },
-      {
-        "slug": "align",
-        "affinity": 0.33
-      },
-      {
-        "slug": "quantum-context",
-        "affinity": 0.33
-      }
-    ],
-    "image": null
-  },
-  {
-    "slug": "cosmo-sim",
-    "title": "Cosmo Sim",
-    "description": "Relativistic N-body simulator. Observer rest frame. No big bang.",
-    "tags": [
-      "physics",
-      "python",
-      "realtime",
-      "observer"
-    ],
-    "url": null,
-    "year": 2026,
-    "phase": "volatile",
-    "section": "toys",
-    "relations": [
-      {
-        "slug": "quantum-context",
-        "affinity": 0.33
-      }
-    ],
-    "image": null
-  },
-  {
-    "slug": "quantum-context",
-    "title": "Quantum Context",
-    "description": "Observer-relative knowledge graph. Confidence ceiling 0.7.",
-    "tags": [
-      "graph",
-      "knowledge",
-      "observer",
-      "python"
-    ],
-    "url": null,
-    "year": 2025,
-    "phase": "volatile",
-    "section": "toys",
-    "relations": [
-      {
-        "slug": "rhizome",
-        "affinity": 0.33
-      },
-      {
-        "slug": "cosmo-sim",
-        "affinity": 0.33
-      },
-      {
-        "slug": "type-dissolution",
-        "affinity": 0.17
-      }
-    ],
-    "image": null
-  },
-  {
-    "slug": "type-dissolution",
-    "title": "Type Dissolution",
-    "description": "What alkahest is and why types should be able to dissolve.",
-    "tags": [
-      "systems",
-      "philosophy",
-      "knowledge"
-    ],
-    "url": null,
+    "slug": "meaning",
+    "title": "Why I'm Wrong Sometimes",
+    "description": "Where AI mistakes come from. Not randomness. Shape.",
+    "tags": [],
+    "url": "https://unity-hallie.github.io/explainers/meaning.html",
     "year": 2025,
     "phase": "fluid",
     "section": "explainers",
-    "relations": [
-      {
-        "slug": "align",
-        "affinity": 0.4
-      },
-      {
-        "slug": "rhizome",
-        "affinity": 0.4
-      },
-      {
-        "slug": "jamestown",
-        "affinity": 0.17
-      },
-      {
-        "slug": "quantum-context",
-        "affinity": 0.17
-      }
-    ],
-    "image": null
+    "relations": []
   }
 ]

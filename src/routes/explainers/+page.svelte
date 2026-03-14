@@ -1,42 +1,31 @@
 <script lang="ts">
-  import type { ManifestItem } from '$lib/types';
-  import Card from '$lib/components/Card.svelte';
-
-  let { data } = $props();
-  let items: ManifestItem[] = $derived(data.manifest.filter((i: ManifestItem) => i.section === 'explainers'));
+  import type { PageData } from './$types'
+  let { data }: { data: PageData } = $props()
 </script>
 
-<svelte:head>
-  <title>explainers — hallie larsson</title>
-</svelte:head>
+<svelte:head><title>explainers — hallie grows</title></svelte:head>
 
-<section aria-labelledby="page-heading">
-  <h1 id="page-heading" class="page-heading">explainers</h1>
-  <p class="page-sub">technical ideas that want to be felt, not just understood</p>
+<h1>explainers</h1>
 
-  <ul class="card-grid" role="list">
-    {#each items as item}
-      <li><Card {item} /></li>
+{#if data.explainers.length === 0}
+  <p class="empty">nothing yet.</p>
+{:else}
+  <ul>
+    {#each data.explainers as e}
+      <li>
+        <a href="/explainers/{e.slug}">{e.title}</a>
+        {#if e.description}<p>{e.description}</p>{/if}
+      </li>
     {/each}
   </ul>
-</section>
+{/if}
 
 <style>
-  .page-heading {
-    color: var(--panel);
-    font-size: var(--size-2xl);
-    margin-bottom: var(--space-3);
-  }
-  .page-sub {
-    color: oklch(62% 0.018 72);
-    color: var(--text-secondary);
-    font-style: italic;
-    margin-bottom: var(--space-12);
-  }
-  .card-grid {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-    gap: var(--space-8);
-  }
+  h1 { margin-bottom: 2rem; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 0.75rem 0; border-bottom: 1px solid var(--border, #eee); }
+  a { text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  p { margin: 0.25rem 0 0; font-size: 0.9rem; opacity: 0.6; }
+  .empty { opacity: 0.4; font-style: italic; }
 </style>
