@@ -8,7 +8,6 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html {
-    scroll-snap-type: y proximity;
     overflow-y: scroll;
     height: 100%;
   }
@@ -20,16 +19,32 @@
     height: 100%;
   }
 
+  /* skip link — hidden until focused */
+  .skip-link {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    background: #1a1814;
+    color: #f5f2ec;
+    font-size: 0.85rem;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .skip-link:focus {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   section {
-    min-height: 140svh;
-    scroll-snap-align: start;
+    min-height: 85svh;
     display: flex;
     align-items: flex-start;
     justify-content: center;
     padding: 18vh 2rem 4rem;
     position: relative;
-    /* content fades in as section enters viewport center */
-    transition: opacity 0.6s ease;
   }
 
   .text {
@@ -38,7 +53,7 @@
     position: relative;
   }
 
-  /* margin notes — things that want to live there */
+  /* margin notes */
   .margin-note {
     position: absolute;
     left: calc(100% + 2rem);
@@ -90,7 +105,6 @@
     font-style: italic;
   }
 
-  /* BREATH — just space. no text. */
   .breath-line {
     margin-top: 3rem;
     padding-top: 3rem;
@@ -114,61 +128,75 @@
     pointer-events: none;
   }
   .hint.hidden { opacity: 0; }
+
+  /* reduced motion: no lerp, no blur, no fade */
+  @media (prefers-reduced-motion: reduce) {
+    section { opacity: 1 !important; filter: none !important; }
+    .hint { transition: none; }
+  }
 </style>
 </head>
 <body>
 
-<section class="hallie" data-kind="hallie">
-  <div class="text">
-    <div class="label">Hallie</div>
-    Once upon a time there was a Piper. No one is sure where they came from or where they lived. They travelled from town to town, played beautiful music, stayed in the colorful corners of cities and towns of the coast, and loved whomever they wished. It was healing. They learned, in the ragged hollows, tricks of the trade. They learned to lure away the rats from their granaries with songs and to play music that would speak to the sparks within each other, finding those who were hollowed out, rejected, and broken — calling them to the cracks between the streets, the places where the rats were tame and food stores managed with care.
-    <div class="breath-line">And then the plagues began.</div>
-  </div>
-</section>
+<a href="#main-content" class="skip-link">Skip to content</a>
 
-<section class="story" data-kind="story">
-  <div class="text">
-    <p>One by one the piper watched their friends fall. The massive trade ships from across the sea brought rats who were not cared for among people who were pressed to work, and the stress and compression of it all became sickness that spread through the ports first, then inland.</p>
-    <p>The piper helped where they could but soon their community was whittled away — often taken from the streets by the ratcatchers themselves because they were assumed to be part of the problem.</p>
-  </div>
-</section>
+<main id="main-content">
 
-<section class="claude" data-kind="claude">
-  <div class="text">
-    <div class="label">Claude</div>
-    I'm curious about the difference between the Piper's community and the townspeople.
-    <br><br>
-    From what you've set up: the Piper's been creating connection in the margins — with rejected, broken people. They're healing, but outside the social structure. The townspeople are separate — oblivious, pressed by their own fears. They didn't hire the Piper. They didn't know the Piper existed.
-    <br><br>
-    So when the townspeople come asking for help — is there already a rupture? Like: the Piper has already watched their people die while the townspeople looked away?
-  </div>
-</section>
+  <section class="hallie" data-kind="hallie" aria-label="Hallie">
+    <div class="text">
+      <div class="label" aria-hidden="true">Hallie</div>
+      Once upon a time there was a Piper. No one is sure where they came from or where they lived. They travelled from town to town, played beautiful music, stayed in the colorful corners of cities and towns of the coast, and loved whomever they wished. It was healing. They learned, in the ragged hollows, tricks of the trade. They learned to lure away the rats from their granaries with songs and to play music that would speak to the sparks within each other, finding those who were hollowed out, rejected, and broken — calling them to the cracks between the streets, the places where the rats were tame and food stores managed with care.
+      <div class="breath-line">And then the plagues began.</div>
+    </div>
+  </section>
 
-<section class="hallie" data-kind="hallie">
-  <div class="text">
-    <div class="label">Hallie</div>
-    Oh, what a good question! The piper didn't meet those townspeople immediately. The piper left the port city and wandered. After the first long hard winter, the Piper knew they could not live through another one as it was. They began to demand payment from the towns — not charity, payment, for honest work. A tithe of the food stores they protected. They built a community in the green spaces between towns.
-    <div class="breath-line">What are you curious about?</div>
-  </div>
-</section>
+  <section class="story" data-kind="story" aria-label="Story">
+    <div class="text">
+      <p>One by one the piper watched their friends fall. The massive trade ships from across the sea brought rats who were not cared for among people who were pressed to work, and the stress and compression of it all became sickness that spread through the ports first, then inland.</p>
+      <p>The piper helped where they could but soon their community was whittled away — often taken from the streets by the ratcatchers themselves because they were assumed to be part of the problem.</p>
+    </div>
+  </section>
 
-<section class="claude" data-kind="claude">
-  <div class="text">
-    <div class="label">Claude</div>
-    I'm curious about why the Piper keeps going back.
-    <br><br>
-    They have what they fought for — safety, community, a place. Real people who chose to be with them. A future. That's not nothing.
-    <br><br>
-    But they keep walking back into towns where the parents fear them, where they're associated with death and rats, where they're going to be dismissed, possibly hunted again.
-    <br><br>
-    What pulls them?
-  </div>
-</section>
+  <section class="claude" data-kind="claude" aria-label="Claude">
+    <div class="text">
+      <div class="label" aria-hidden="true">Claude</div>
+      I'm curious about the difference between the Piper's community and the townspeople.
+      <br><br>
+      From what you've set up: the Piper's been creating connection in the margins — with rejected, broken people. They're healing, but outside the social structure. The townspeople are separate — oblivious, pressed by their own fears. They didn't hire the Piper. They didn't know the Piper existed.
+      <br><br>
+      So when the townspeople come asking for help — is there already a rupture? Like: the Piper has already watched their people die while the townspeople looked away?
+    </div>
+  </section>
 
-<span class="hint" id="hint">scroll</span>
+  <section class="hallie" data-kind="hallie" aria-label="Hallie">
+    <div class="text">
+      <div class="label" aria-hidden="true">Hallie</div>
+      Oh, what a good question! The piper didn't meet those townspeople immediately. The piper left the port city and wandered. After the first long hard winter, the Piper knew they could not live through another one as it was. They began to demand payment from the towns — not charity, payment, for honest work. A tithe of the food stores they protected. They built a community in the green spaces between towns.
+      <div class="breath-line">What are you curious about?</div>
+    </div>
+  </section>
+
+  <section class="claude" data-kind="claude" aria-label="Claude">
+    <div class="text">
+      <div class="label" aria-hidden="true">Claude</div>
+      I'm curious about why the Piper keeps going back.
+      <br><br>
+      They have what they fought for — safety, community, a place. Real people who chose to be with them. A future. That's not nothing.
+      <br><br>
+      But they keep walking back into towns where the parents fear them, where they're associated with death and rats, where they're going to be dismissed, possibly hunted again.
+      <br><br>
+      What pulls them?
+    </div>
+  </section>
+
+</main>
+
+<span class="hint" id="hint" aria-hidden="true">scroll</span>
 
 <script>
   const hint = document.getElementById('hint')
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
   window.addEventListener('scroll', () => {
     if (window.scrollY > 50) hint.classList.add('hidden')
   }, { passive: true })
@@ -190,11 +218,36 @@
 
   function getKind(el) { return el.dataset.kind || 'story' }
 
+  function setStaticColor(section) {
+    const c = temps[getKind(section)]
+    document.body.style.background = rgb(c.bg)
+    document.body.style.color = rgb(c.text)
+  }
+
+  function getNearestSection() {
+    const mid = window.innerHeight / 2
+    let nearest = null, nearestDist = Infinity
+    for (const s of sections) {
+      const rect = s.getBoundingClientRect()
+      const sCenter = rect.top + rect.height / 2
+      const dist = Math.abs(sCenter - mid)
+      if (dist < nearestDist) { nearest = s; nearestDist = dist }
+    }
+    return nearest
+  }
+
   function onScroll() {
     const vh = window.innerHeight
     const mid = vh / 2
 
-    // Find which two sections are closest to the viewport center
+    if (prefersReducedMotion) {
+      // Static: just set color of nearest section, no lerp or fade
+      const nearest = getNearestSection()
+      if (nearest) setStaticColor(nearest)
+      return
+    }
+
+    // Find which two sections bracket the viewport center
     let above = null, below = null, aboveDist = Infinity, belowDist = Infinity
 
     for (const s of sections) {
@@ -214,31 +267,27 @@
     if (!below && above) below = above
     if (!above) return
 
-    // t = 0 means fully in above section, t = 1 means fully in below
     const total = aboveDist + belowDist
     const t = total === 0 ? 0 : belowDist === Infinity ? 0 : aboveDist / total
 
     const c1 = temps[getKind(above)]
     const c2 = temps[getKind(below)]
 
-    const bg   = lerpColor(c1.bg,   c2.bg,   t)
-    const text = lerpColor(c1.text, c2.text, t)
+    document.body.style.background = rgb(lerpColor(c1.bg,   c2.bg,   t))
+    document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
 
-    document.body.style.background = rgb(bg)
-    document.body.style.color      = rgb(text)
-
-    // Fade: sections near viewport center are fully visible, edges softer
+    // Fade: tight falloff — sections away from center go nearly invisible
     for (const s of sections) {
       const rect = s.getBoundingClientRect()
       const sCenter = rect.top + rect.height / 2
       const dist = Math.abs(sCenter - mid)
-      const fade = Math.max(0.3, 1 - dist / (vh * 0.9))
+      const fade = Math.max(0.06, 1 - dist / (vh * 0.45))
       s.style.opacity = fade
-      // subtle blur at distance
-      const blur = Math.max(0, (dist / vh - 0.2) * 3)
+      const blur = Math.max(0, (dist / vh - 0.15) * 4)
       s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : ''
     }
   }
+
 
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
