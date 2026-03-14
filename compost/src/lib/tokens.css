@@ -1,0 +1,132 @@
+/*
+  Material token system.
+  Ground: aged plaster, morning light from the east.
+  Phase drives surface properties — not decoration, semantics.
+*/
+
+@property --luminance {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  /* Ground — warm plaster fallback, canvas provides actual wall */
+  --ground:        oklch(88% 0.022 80);
+  --ground-grain:  oklch(85% 0.026 78);
+  --ground-warm:   oklch(82% 0.030 76);
+
+  /* Panel surfaces — paper on plaster, slightly lifted */
+  --panel:         oklch(97% 0.010 84);
+  --panel-warm:    oklch(95% 0.018 82);
+  --panel-deep:    oklch(92% 0.024 80);
+
+  /* Text — ink on warm surfaces */
+  --text-primary:   oklch(20% 0.030 52);
+  --text-secondary: oklch(38% 0.022 58);
+  --text-dim:       oklch(52% 0.016 65);
+
+  /* Amber — warm dark gold, readable on plaster */
+  --amber:     oklch(46% 0.120 72);
+  --amber-dim: oklch(36% 0.085 70);
+
+  /* Accent — pottery pink, matte glaze */
+  --rose:        oklch(58% 0.100 10);
+  --rose-dim:    oklch(48% 0.070 12);
+  --rose-deep:   oklch(38% 0.055 15);
+
+  /* Lichen — rocky coast vegetation */
+  --lichen:      oklch(62% 0.075 140);
+  --lichen-dim:  oklch(50% 0.055 135);
+
+  /* Granite — coastal stone */
+  --granite:     oklch(55% 0.012 255);
+  --granite-dim: oklch(42% 0.008 260);
+
+  /* Backlit — fluorescent behind pine, warm cream */
+  --backlit:     oklch(97% 0.040 88);
+
+  /* Surface defaults — paper floating on warm plaster */
+  --surface-bg:     var(--panel);
+  --surface-border: oklch(70% 0.020 72 / 0.28);
+  --surface-shadow: oklch(55% 0.025 72 / 0.16);
+  --surface-glow:   oklch(85% 0.060 82 / 0);
+
+  /* Motion */
+  --ease-emerge:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-settle:   cubic-bezier(0.4, 0, 0.6, 1);
+  --dur-fast:      120ms;
+  --dur-mid:       280ms;
+  --dur-slow:      520ms;
+
+  /* Type */
+  --font-body:   'Libre Baskerville', 'Georgia', serif;
+  --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+  --font-ui:     system-ui, sans-serif;
+
+  --size-xs:  0.75rem;
+  --size-sm:  0.875rem;
+  --size-md:  1rem;
+  --size-lg:  1.25rem;
+  --size-xl:  1.75rem;
+  --size-2xl: 2.5rem;
+  --size-3xl: 3.5rem;
+
+  --leading-tight:  1.2;
+  --leading-body:   1.65;
+  --leading-loose:  1.9;
+
+  /* Space */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+}
+
+/* Phase-derived surface properties */
+
+[data-phase="salt"] {
+  /* Permanent. Warm amber-cream paper. */
+  --surface-bg:     oklch(96% 0.022 84);
+  --surface-border: oklch(65% 0.040 72 / 0.22);
+  --surface-glow:   oklch(84% 0.060 78 / 0);
+}
+
+[data-phase="fluid"] {
+  /* Stable. Faint lichen tint. */
+  --surface-bg:     oklch(97% 0.016 92);
+  --surface-border: oklch(60% 0.040 138 / 0.18);
+  --surface-glow:   oklch(80% 0.060 120 / 0);
+}
+
+[data-phase="volatile"] {
+  /* Still forming. Clean white, rose neon lives here. */
+  --surface-bg:     oklch(98% 0.008 88);
+  --surface-border: oklch(65% 0.060 10 / 0.18);
+  --surface-glow:   oklch(75% 0.090 10 / 0.18);
+}
+
+/* Hover */
+
+[data-phase="salt"]:hover,
+[data-phase="salt"]:focus-visible {
+  --surface-glow:   oklch(72% 0.080 76 / 0.22);
+  --surface-border: oklch(60% 0.050 72 / 0.30);
+}
+
+[data-phase="fluid"]:hover,
+[data-phase="fluid"]:focus-visible {
+  --surface-glow:   oklch(70% 0.080 130 / 0.22);
+  --surface-border: oklch(55% 0.060 138 / 0.28);
+}
+
+[data-phase="volatile"]:hover,
+[data-phase="volatile"]:focus-visible {
+  --surface-glow:   oklch(68% 0.110 10 / 0.32);
+  --surface-border: oklch(60% 0.100 10 / 0.32);
+}

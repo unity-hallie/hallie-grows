@@ -92,6 +92,21 @@ export function allContent(graph: SiteGraph, kind?: ContentKind): ContentMeta[] 
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
+// Return sections for a post in order
+export function getSections(graph: SiteGraph, postSlug: string) {
+  const postName = `post/${postSlug}`
+  const all = [...graph.state.setOfSupport, ...graph.state.usable]
+  const sectionNames = all
+    .filter((i): i is Edge => (i as Edge).kind === 'edge')
+    .filter(e => e.subject === postName && e.predicate === 'HAS_SECTION')
+    .map(e => e.object)
+  return sectionNames
+    .map(n => graph.meta[n])
+    .filter(Boolean)
+    .filter(m => m.kind === 'section')
+    .sort((a, b) => (a.sectionIndex ?? 0) - (b.sectionIndex ?? 0))
+}
+
 // Return items connected to a given item via edges
 export function related(graph: SiteGraph, kind: ContentKind, slug: string): ContentMeta[] {
   const name = itemName(kind, slug)
