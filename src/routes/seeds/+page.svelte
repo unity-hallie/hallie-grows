@@ -7,7 +7,6 @@
 
 <div class="section-header">
   <h1>seeds</h1>
-  <p class="desc">interactive artifacts and experiments. planted, still growing.</p>
 </div>
 
 {#if data.explainers.length === 0}

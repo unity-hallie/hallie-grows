@@ -117,6 +117,10 @@
               <div class="featured-img">
                 <img src="/images/jamestown-header.jpg" alt={w.title} />
               </div>
+            {:else if w.slug === 'align'}
+              <div class="featured-img">
+                <img src="/images/align-screenshot.png" alt={w.title} />
+              </div>
             {:else}
               <div class="featured-img featured-img-placeholder"></div>
             {/if}

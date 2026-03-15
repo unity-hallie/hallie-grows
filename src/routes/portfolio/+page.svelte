@@ -8,6 +8,7 @@
 
   const images: Record<string, string> = {
     jamestown: '/images/jamestown-header.jpg',
+    align: '/images/align-screenshot.png',
   }
 </script>
 
@@ -15,7 +16,6 @@
 
 <div class="section-header">
   <h1>portfolio</h1>
-  <p class="desc">things built in the world.</p>
 </div>
 
 {#if data.work.length === 0}

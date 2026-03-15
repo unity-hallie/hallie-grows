@@ -5,6 +5,10 @@
 <article>
   <a href="/portfolio" class="back">← portfolio</a>
 
+  <div class="hero">
+    <img src="/images/align-screenshot.png" alt="Una Guide in use" class="hero-img" />
+  </div>
+
   <header>
     <div class="meta">
       <span class="year">2024–present</span>
@@ -62,6 +66,8 @@
     transition: opacity 0.15s;
   }
   .back:hover { opacity: 1; }
+  .hero { margin-bottom: 2.5rem; }
+  .hero-img { width: 100%; display: block; max-height: 360px; object-fit: cover; object-position: top; }
 
   header { margin-bottom: 3rem; }
 

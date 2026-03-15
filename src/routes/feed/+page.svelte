@@ -7,7 +7,6 @@
 
 <div class="section-header">
   <h1>feed</h1>
-  <p class="desc">conversations, made slowly. dispatches from thinking in progress.</p>
 </div>
 
 {#if data.posts.length === 0}
