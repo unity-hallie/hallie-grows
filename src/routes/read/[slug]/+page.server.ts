@@ -1,13 +1,10 @@
-import { loadGraph, allContent, getSections } from '$lib/graph/index.js'
 import { error } from '@sveltejs/kit'
+import { getPost, getSections } from '$lib/db/index.js'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = ({ params }) => {
-  const graph = loadGraph()
-  const post = allContent(graph, 'post').find(p => p.slug === params.slug)
+export const load: PageServerLoad = async ({ params }) => {
+  const post = await getPost(params.slug)
   if (!post) error(404, 'Not found')
-
-  const sections = getSections(graph, params.slug)
-
+  const sections = await getSections(params.slug)
   return { post, sections }
 }

@@ -30,7 +30,6 @@
   // ── SCROLL / TEMPERATURE ─────────────────────────────────
 
   const temps: Record<string, { bg: number[]; text: number[] }> = {
-    story:  { bg: [245, 242, 236], text: [42, 37, 32] },
     hallie: { bg: [240, 235, 224], text: [42, 31, 15] },
     claude: { bg: [237, 240, 245], text: [24, 32, 44] },
   }
@@ -205,7 +204,7 @@
 
       if (prefersReducedMotion) {
         if (focused) {
-          const c = temps[focused.dataset.kind || 'story']
+          const c = temps[focused.dataset.kind || 'hallie']
           document.body.style.background = rgb(c.bg)
           document.body.style.color = rgb(c.text)
         }
@@ -226,8 +225,8 @@
 
       const total = aboveDist + belowDist
       const t = total === 0 ? 0 : belowDist === Infinity ? 0 : aboveDist / total
-      const c1 = temps[above.dataset.kind || 'story']
-      const c2 = temps[(below ?? above).dataset.kind || 'story']
+      const c1 = temps[above.dataset.kind || 'hallie']
+      const c2 = temps[(below ?? above).dataset.kind || 'hallie']
       document.body.style.background = rgb(lerpColor(c1.bg, c2.bg, t))
       document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
 
@@ -259,14 +258,14 @@
 <main id="main-content">
   {#each data.sections as section, i}
     <section
-      class={section.sectionType ?? 'story'}
-      data-kind={section.sectionType ?? 'story'}
+      class={section.section_type}
+      data-kind={section.section_type}
       data-section={i}
-      aria-label={section.sectionType === 'hallie' ? 'Hallie' : section.sectionType === 'claude' ? 'Claude' : 'Story'}
+      aria-label={section.section_type === 'hallie' ? 'Hallie' : 'Claude'}
     >
       <div class="text">
-        {#if section.sectionType === 'hallie' || section.sectionType === 'claude'}
-          <div class="label" aria-hidden="true">{section.sectionType === 'hallie' ? 'Hallie' : 'Claude'}</div>
+        {#if section.section_type === 'hallie' || section.section_type === 'claude'}
+          <div class="label" aria-hidden="true">{section.section_type === 'hallie' ? 'Hallie' : 'Claude'}</div>
         {/if}
         {@html section.body ?? ''}
       </div>
@@ -343,9 +342,6 @@
   }
 
   .text { max-width: 560px; width: 100%; position: relative; }
-
-  section.story .text { font-size: 1.2rem; line-height: 1.75; color: #2a2520; }
-  section.story .text :global(p + p) { margin-top: 1.5rem; }
 
   section.hallie .label {
     font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;

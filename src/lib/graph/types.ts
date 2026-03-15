@@ -1,7 +1,24 @@
 import type { Item, Edge, OtterState } from 'alkahest'
 
 export type ContentKind = 'post' | 'explainer' | 'work' | 'section'
-export type SectionType = 'story' | 'hallie' | 'claude'
+export type SectionType = 'hallie' | 'claude'
+
+// Kind registry — each kind declares its own UI properties
+export const KINDS: Record<ContentKind, {
+  visible: boolean    // surfaces in timeline, landing, nav buckets
+  route: string       // base path for links (e.g. '/read', '/explainers')
+}> = {
+  post:      { visible: true,  route: '/read' },
+  explainer: { visible: true,  route: '/explainers' },
+  work:      { visible: true,  route: '/work' },
+  section:   { visible: false, route: '' },
+}
+
+export function hrefFor(meta: ContentMeta): string {
+  const config = KINDS[meta.kind]
+  if (!config.visible || !config.route) return '#'
+  return `${config.route}/${meta.slug}`
+}
 
 export interface ContentMeta {
   kind: ContentKind
