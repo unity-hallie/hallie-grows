@@ -10,6 +10,6 @@ export const load: PageServerLoad = async () => {
   return {
     posts: posts.slice(0, 3),
     explainers: explainers.slice(0, 3),
-    work: work.slice(0, 3),
+    work,
   }
 }
