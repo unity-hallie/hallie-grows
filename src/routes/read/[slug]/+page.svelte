@@ -28,6 +28,21 @@
   }
 
   // ── SCROLL / TEMPERATURE ─────────────────────────────────
+  //
+  // Each section carries a "voice" — hallie or claude — with its own
+  // color temperature. As you scroll, the page background continuously
+  // interpolates between the two adjacent section temperatures, so the
+  // reading experience feels like moving through a conversation rather
+  // than hitting discrete state changes.
+  //
+  // hallie: warm paper (#f0ebe0) → dark ink (#2a1f0f)
+  //         feels like parchment, handwriting, presence
+  // claude: cool paper (#edeff5) → near-black (#18202c)
+  //         feels like screen, considered distance, structure
+  //
+  // The interpolation happens in RGB space, which is perceptually uneven
+  // but correct here — we want the warmth/coolness shift to feel physical,
+  // and RGB gives a more immediate temperature read than, say, OKLab.
 
   const temps: Record<string, { bg: number[]; text: number[] }> = {
     hallie: { bg: [240, 235, 224], text: [42, 31, 15] },
@@ -202,6 +217,8 @@
       if (focused !== lastFocusedSection && lastFocusedSection) closeEditor(lastFocusedSection)
       lastFocusedSection = focused
 
+      // prefers-reduced-motion: snap to nearest section color, no lerp, no blur.
+      // The color shift still happens — it's the animation that stops.
       if (prefersReducedMotion) {
         if (focused) {
           const c = temps[focused.dataset.kind || 'hallie']
@@ -211,6 +228,10 @@
         return
       }
 
+      // Find the closest section above and below viewport center.
+      // "above" = section whose center has already passed the midpoint.
+      // "below" = next section approaching from below.
+      // t = how far we are between them: 0 = fully at above, 1 = fully at below.
       let above: HTMLElement | null = null, below: HTMLElement | null = null
       let aboveDist = Infinity, belowDist = Infinity
       for (const s of sections) {
@@ -230,6 +251,9 @@
       document.body.style.background = rgb(lerpColor(c1.bg, c2.bg, t))
       document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
 
+      // Fade and blur off-center sections. The focused section is fully sharp;
+      // sections more than ~45% of vh away from center start losing opacity and
+      // picking up blur. Minimum opacity is 0.06 — never fully invisible.
       for (const s of sections) {
         const rect = s.getBoundingClientRect()
         const dist = Math.abs(rect.top + rect.height / 2 - mid)

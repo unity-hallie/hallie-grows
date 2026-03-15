@@ -1,4 +1,18 @@
 <script lang="ts">
+  // PaperCanvas — WebGL paper texture background
+  //
+  // A full-screen fragment shader that renders aged paper: fine grain from
+  // fractional Brownian motion noise, and a faint laid finish (the horizontal
+  // lines left by the wire mesh in handmade paper). Both are kept very light —
+  // you feel texture without consciously registering it.
+  //
+  // The shader drifts imperceptibly over time (u_time * 0.0004) so it never
+  // looks like a static image. The drift is slow enough that you won't notice
+  // it unless you're looking for it.
+  //
+  // Philosophy from palimpsest (github.com/unity-hallie/palimpsest):
+  // text is sacred, everything else is atmosphere.
+
   import { onMount } from 'svelte'
 
   let canvas: HTMLCanvasElement
@@ -13,6 +27,8 @@
     uniform float u_time;
     uniform vec2 u_res;
 
+    // Value noise via a sin-based hash. Fast and good enough for paper grain —
+    // we don't need the quality of Perlin noise here.
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
     }
@@ -37,17 +53,20 @@
 
     void main() {
       vec2 uv = gl_FragCoord.xy / u_res;
-      float t = u_time * 0.0004;
+      float t = u_time * 0.0004; // imperceptibly slow drift
 
-      // Fine paper grain — light
+      // Fine paper grain via layered fBm noise.
+      // Scale of 80 puts the grain at roughly paper-fiber resolution.
+      // Amplitude of 0.016 keeps it subliminal.
       vec2 p = uv * 80.0 + t;
       float grain = fbm(p) + fbm(p * 2.3 + vec2(3.7, 1.1)) * 0.5;
       grain = (grain / 1.5 - 0.5) * 0.016;
 
-      // Laid finish — horizontal paper lines, barely there
+      // Laid finish: the faint horizontal lines left by the wire mesh in
+      // handmade paper. Period of ~6px, amplitude of 0.003 — barely visible.
       float laid = sin(gl_FragCoord.y * 1.047) * 0.003;
 
-      // Paper base: #f5f2ec
+      // Paper base color matches the reader's warm background (#f5f2ec).
       vec3 col = vec3(0.961, 0.949, 0.925) + grain + laid;
 
       gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);

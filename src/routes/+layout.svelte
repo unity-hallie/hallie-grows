@@ -38,6 +38,14 @@
   }
   :global(a) { color: inherit; }
 
+  /* ── ACCESSIBILITY GUARD ────────────────────────────────
+     Images without alt text get a screaming pink outline.
+     If you see this, add alt text before shipping. */
+  :global(img:not([alt])) {
+    outline: 6px solid hotpink !important;
+    filter: saturate(0) brightness(0.6) !important;
+  }
+
   nav {
     padding: 1.5rem 2rem;
     display: flex;

@@ -101,6 +101,8 @@
       <a href="/portfolio">portfolio</a>
       <a href="/seeds">seeds</a>
       <a href="/resume">resume</a>
+      <a href="https://www.linkedin.com/in/hallie-larsson-7282077/" target="_blank" rel="noopener noreferrer">linkedin</a>
+      <a href="https://github.com/unity-hallie/hallie-grows" target="_blank" rel="noopener noreferrer">this repo</a>
     </nav>
   </div>
 </section>
