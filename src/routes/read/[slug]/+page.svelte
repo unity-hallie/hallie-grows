@@ -4,28 +4,12 @@
 
   let { data }: { data: PageData } = $props()
 
-  const NOTES_KEY = `hg:notes:${data.post.slug}`
-
-  // ── NOTES ────────────────────────────────────────────────
-
-  function loadNotes(): Record<string, { text: string; created: number }[]> {
-    if (typeof localStorage === 'undefined') return {}
-    try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}') } catch { return {} }
-  }
-  function saveNotes(n: ReturnType<typeof loadNotes>) {
-    localStorage.setItem(NOTES_KEY, JSON.stringify(n))
-  }
-  function addNote(idx: number, text: string): boolean {
-    if (!text.trim()) return false
-    const notes = loadNotes()
-    if (!notes[idx]) notes[idx] = []
-    notes[idx].push({ text: text.trim(), created: Date.now() })
-    saveNotes(notes)
-    return true
-  }
-  function getSectionNotes(idx: number) {
-    return loadNotes()[idx] || []
-  }
+  // ── NOTES (commented out — revisit after launch) ─────────
+  // const NOTES_KEY = `hg:notes:${data.post.slug}`
+  // function loadNotes() { ... }
+  // function saveNotes() { ... }
+  // function addNote() { ... }
+  // function getSectionNotes() { ... }
 
   // ── SCROLL / TEMPERATURE ─────────────────────────────────
   //
@@ -57,7 +41,7 @@
 
   onMount(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const sections = [...document.querySelectorAll<HTMLElement>('section[data-kind]')]
+    const sections = [...document.querySelectorAll<HTMLElement>('[data-kind]')]
     const hint = document.getElementById('hint')
 
     // ── HINT ───────────────────────────────────────────────
@@ -65,8 +49,6 @@
       if (window.scrollY > 50) hint?.classList.add('hidden')
     }, { passive: true })
 
-    // ── SECTION FOCUS ──────────────────────────────────────
-    let openEditorSection: HTMLElement | null = null
     let lastFocusedSection: HTMLElement | null = null
 
     function getFocused() {
@@ -80,141 +62,12 @@
       return nearest
     }
 
-    function openEditor(section: HTMLElement) {
-      if (openEditorSection && openEditorSection !== section) closeEditor(openEditorSection)
-      const editor = section.querySelector<HTMLElement>('.note-editor')
-      const zone = section.querySelector<HTMLElement>('.margin-zone')
-      if (!editor) return
-      editor.classList.add('open')
-      zone?.classList.add('editing')
-      openEditorSection = section
-      editor.querySelector('textarea')?.focus()
-    }
-
-    function closeEditor(section: HTMLElement) {
-      const editor = section.querySelector<HTMLElement>('.note-editor')
-      const zone = section.querySelector<HTMLElement>('.margin-zone')
-      const textarea = section.querySelector<HTMLTextAreaElement>('textarea')
-      editor?.classList.remove('open')
-      zone?.classList.remove('editing')
-      if (textarea) textarea.value = ''
-      if (openEditorSection === section) openEditorSection = null
-    }
-
-    function renderNotes(container: Element, idx: number) {
-      const sectionNotes = getSectionNotes(idx)
-      container.innerHTML = sectionNotes.map(n =>
-        `<div class="margin-note-item" role="listitem">${n.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
-      ).join('')
-    }
-
-    // ── WIRE MARGINS ───────────────────────────────────────
-    sections.forEach(section => {
-      const idx = parseInt(section.dataset.section || '0')
-      const zone = section.querySelector<HTMLElement>('.margin-zone')
-      const notesContainer = section.querySelector<HTMLElement>('.margin-notes')
-      const saveBtn = section.querySelector<HTMLButtonElement>('.btn-save')
-      const cancelBtn = section.querySelector<HTMLButtonElement>('.btn-cancel')
-
-      if (notesContainer) renderNotes(notesContainer, idx)
-
-      zone?.addEventListener('click', e => {
-        if ((e.target as HTMLElement).closest('.note-actions')) return
-        openEditor(section)
-      })
-      zone?.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEditor(section) }
-      })
-
-      saveBtn?.addEventListener('click', () => {
-        const textarea = section.querySelector<HTMLTextAreaElement>('textarea')
-        if (!textarea || !addNote(idx, textarea.value)) return
-        if (notesContainer) renderNotes(notesContainer, idx)
-        closeEditor(section)
-      })
-      cancelBtn?.addEventListener('click', () => closeEditor(section))
-    })
-
-    // ── TOUCH: swipe right → open drawer ──────────────────
-    const drawer = document.getElementById('margin-drawer')
-    const drawerClose = document.getElementById('drawer-close')
-    const drawerBackdrop = document.getElementById('drawer-backdrop')
-    const drawerNotes = document.getElementById('drawer-notes')
-    const drawerTextarea = document.getElementById('drawer-note-text') as HTMLTextAreaElement
-    const drawerSave = document.getElementById('drawer-save')
-    const drawerCancel = document.getElementById('drawer-cancel')
-
-    let activeDrawerSection: HTMLElement | null = null
-    let lastFocusedEl: HTMLElement | null = null
-
-    function openDrawer(section: HTMLElement) {
-      if (!drawer) return
-      activeDrawerSection = section
-      const idx = parseInt(section.dataset.section || '0')
-      if (drawerNotes) renderNotes(drawerNotes, idx)
-      if (drawerTextarea) drawerTextarea.value = ''
-      drawer.style.display = 'block'
-      drawer.removeAttribute('aria-hidden')
-      if (drawerBackdrop) drawerBackdrop.style.display = 'block'
-      requestAnimationFrame(() => drawer.classList.add('open'))
-      lastFocusedEl = document.activeElement as HTMLElement
-      drawerClose?.focus()
-      drawer.addEventListener('keydown', trapFocus)
-      document.addEventListener('keydown', handleEsc)
-    }
-
-    function closeDrawer() {
-      if (!drawer) return
-      drawer.classList.remove('open')
-      drawer.setAttribute('aria-hidden', 'true')
-      if (drawerBackdrop) drawerBackdrop.style.display = 'none'
-      drawer.removeEventListener('keydown', trapFocus)
-      document.removeEventListener('keydown', handleEsc)
-      setTimeout(() => { if (drawer) drawer.style.display = 'none' }, 320)
-      lastFocusedEl?.focus()
-      activeDrawerSection = null
-    }
-
-    function trapFocus(e: KeyboardEvent) {
-      if (e.key !== 'Tab' || !drawer) return
-      const focusable = [...drawer.querySelectorAll<HTMLElement>('button,input,textarea')].filter(el => !(el as HTMLButtonElement).disabled)
-      const first = focusable[0], last = focusable[focusable.length - 1]
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
-    function handleEsc(e: KeyboardEvent) { if (e.key === 'Escape') closeDrawer() }
-
-    drawerClose?.addEventListener('click', closeDrawer)
-    drawerBackdrop?.addEventListener('click', closeDrawer)
-    drawerSave?.addEventListener('click', () => {
-      if (!activeDrawerSection || !drawerTextarea) return
-      const idx = parseInt(activeDrawerSection.dataset.section || '0')
-      if (!addNote(idx, drawerTextarea.value)) return
-      drawerTextarea.value = ''
-      if (drawerNotes) renderNotes(drawerNotes, idx)
-    })
-    drawerCancel?.addEventListener('click', () => { if (drawerTextarea) drawerTextarea.value = '' })
-
-    let touchStartX = 0, touchStartY = 0
-    document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY }, { passive: true })
-    document.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - touchStartX
-      const dy = e.changedTouches[0].clientY - touchStartY
-      if (Math.abs(dx) < Math.abs(dy) * 1.5) return
-      if (dx > 60 && !drawer?.classList.contains('open')) {
-        const focused = getFocused(); if (focused) openDrawer(focused)
-      } else if (dx < -60 && drawer?.classList.contains('open')) {
-        closeDrawer()
-      }
-    }, { passive: true })
-
     // ── SCROLL / TEMPERATURE ───────────────────────────────
     function onScroll() {
       const vh = window.innerHeight, mid = vh / 2
       const focused = getFocused()
       sections.forEach(s => s.classList.toggle('focused', s === focused))
 
-      if (focused !== lastFocusedSection && lastFocusedSection) closeEditor(lastFocusedSection)
       lastFocusedSection = focused
 
       // prefers-reduced-motion: snap to nearest section color, no lerp, no blur.
@@ -251,12 +104,28 @@
       document.body.style.background = rgb(lerpColor(c1.bg, c2.bg, t))
       document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
 
-      // Fade and blur off-center sections. The focused section is fully sharp;
-      // sections more than ~45% of vh away from center start losing opacity and
-      // picking up blur. Minimum opacity is 0.06 — never fully invisible.
+      // Fade/blur logic — two independent distances, whichever is larger wins:
+      //
+      // leaveDist: how far the section's bottom has risen above the "safe zone"
+      //   threshold (vh - ~3em). Full opacity while bottom is near the screen
+      //   bottom; fades once it rises past that line.
+      //
+      // enterDist: how far the section's top still is below viewport center.
+      //   Fades in as it scrolls up from below; fully opaque once top clears mid.
+      //
+      // Off-screen sections use section-center distance (original behavior).
+      const margin = vh * 0.06 // ≈ 3em — threshold above screen bottom
+      const threshold = vh - margin
       for (const s of sections) {
         const rect = s.getBoundingClientRect()
-        const dist = Math.abs(rect.top + rect.height / 2 - mid)
+        let dist
+        if (rect.bottom < 0 || rect.top > vh) {
+          dist = Math.abs(rect.top + rect.height / 2 - mid)
+        } else {
+          const leaveDist = Math.max(0, threshold - rect.bottom)
+          const enterDist = Math.max(0, rect.top - vh * 0.4)
+          dist = Math.max(leaveDist, enterDist)
+        }
         s.style.opacity = String(Math.max(0.06, 1 - dist / (vh * 0.45)))
         const blur = Math.max(0, (dist / vh - 0.15) * 4)
         s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : ''
@@ -276,9 +145,6 @@
   <title>{data.post.title}</title>
 </svelte:head>
 
-<a href="/writing" class="back-link">← writing</a>
-<a href="/privacy" class="privacy-link">privacy</a>
-
 <main id="main-content">
   {#each data.sections as section, i}
     <section
@@ -294,38 +160,27 @@
         {@html section.body ?? ''}
       </div>
 
-      <div class="margin-zone" tabindex="0" role="button" aria-label="margin — click to add a note" data-section={i}>
-        <div class="margin-notes" role="list"></div>
-        <div class="note-editor">
-          <label for="note-text-{i}" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
-          <textarea id="note-text-{i}" placeholder="what caught you here…"></textarea>
-          <div class="note-actions">
-            <button class="btn-save" data-section={i}>save</button>
-            <button class="btn-cancel" data-section={i}>cancel</button>
-          </div>
-        </div>
-      </div>
-
+      <!-- notes/margin feature commented out — revisit after launch
+      <div class="margin-zone" ...>...</div>
       <span class="swipe-hint" aria-hidden="true"></span>
+      -->
     </section>
   {/each}
+
+  <footer class="post-footer">
+    {#if data.nextPart}
+      <a href="/read/{data.nextPart.slug}" class="next-link">
+        {data.nextPart.title} →
+      </a>
+    {/if}
+    <a href="/feed" class="feed-link">← feed</a>
+  </footer>
 </main>
 
-<!-- mobile drawer -->
-<aside class="margin-drawer" id="margin-drawer" role="complementary" aria-label="Margin notes" aria-hidden="true" style="display:none">
-  <button class="drawer-close" id="drawer-close" aria-label="Close">✕</button>
-  <div class="margin-notes" id="drawer-notes" role="list"></div>
-  <div class="note-editor" id="drawer-editor">
-    <label for="drawer-note-text" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your note</label>
-    <textarea id="drawer-note-text" placeholder="what caught you here…"></textarea>
-    <div class="note-actions">
-      <button id="drawer-save">save</button>
-      <button class="btn-cancel" id="drawer-cancel">cancel</button>
-    </div>
-  </div>
-</aside>
-
-<div id="drawer-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.15);z-index:99;" aria-hidden="true"></div>
+<!-- mobile drawer commented out — revisit after launch
+<aside class="margin-drawer" ...>...</aside>
+<div id="drawer-backdrop" ...></div>
+-->
 
 <span class="hint" id="hint" aria-hidden="true">scroll</span>
 
@@ -337,22 +192,6 @@
     margin: 0;
     overflow-y: scroll;
   }
-
-  .back-link {
-    position: fixed; top: 1.25rem; left: 1.5rem;
-    font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
-    color: #c0b8b0; text-decoration: none; z-index: 50; transition: color 0.2s;
-  }
-  .back-link:hover, .back-link:focus { color: #8a7a6a; }
-  .back-link:focus { outline: 2px solid currentColor; outline-offset: 2px; }
-
-  .privacy-link {
-    position: fixed; bottom: 1rem; right: 1rem;
-    font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase;
-    color: #c0b8b0; text-decoration: none; z-index: 50; transition: color 0.2s;
-  }
-  .privacy-link:hover, .privacy-link:focus { color: #8a7a6a; }
-  .privacy-link:focus { outline: 2px solid currentColor; outline-offset: 2px; }
 
   /* ── SECTIONS ─────────────────────────────────────────── */
 
@@ -383,62 +222,36 @@
     margin-top: 3rem; padding-top: 3rem; opacity: 0.6; font-size: 1.05rem;
   }
 
-  /* ── MARGIN PAPER ─────────────────────────────────────── */
+  /* ── MARGIN NOTES (commented out — revisit after launch) ── */
+  /* .margin-zone { ... } .note-editor { ... } .margin-drawer { ... } */
 
-  .margin-zone {
-    position: absolute;
-    left: calc(50% + 280px + 1.5rem);
-    top: 0; bottom: 0;
-    width: 160px;
-    cursor: text;
-    opacity: 0.4;
-    transition: opacity 0.4s;
-  }
-  section:hover .margin-zone,
-  section:focus-within .margin-zone { opacity: 1; }
-  .margin-zone:focus { outline: none; opacity: 1; }
+  /* ── POST FOOTER ──────────────────────────────────────── */
 
-  .margin-zone::before {
-    content: '';
-    position: absolute; inset: 0;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(1.55rem - 1px),
-      rgba(140, 120, 100, 0.18) calc(1.55rem - 1px),
-      rgba(140, 120, 100, 0.18) 1.55rem
-    );
-    opacity: 1; transition: opacity 0.3s;
-  }
-  .margin-zone.editing::before { opacity: 0; }
-
-  .margin-notes { padding: 0.4rem 0.5rem 0; }
-  .margin-note-item {
-    font-size: 0.72rem; line-height: 1.55rem;
-    color: #8a7a6a; font-style: italic;
-    padding-left: 0.4rem;
-    border-left: 1px solid rgba(140,120,100,0.3);
+  .post-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 3rem 2rem 6rem;
+    max-width: 560px;
+    margin: 0 auto;
+    gap: 1rem;
   }
 
-  .note-editor { display: none; flex-direction: column; padding: 0.4rem 0 0 0.5rem; }
-  .note-editor.open { display: flex; }
-  .note-editor textarea {
-    font-family: inherit; font-size: 0.75rem;
-    line-height: 1.55rem;
-    color: #2a2520; background: transparent;
-    border: none; resize: none; width: 100%;
-    min-height: calc(1.55rem * 3); padding: 0;
+  .next-link {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: inherit;
+    text-decoration: none;
   }
-  .note-editor textarea:focus { outline: none; }
-  .note-editor .note-actions { display: flex; gap: 0.75rem; padding: 0.35rem 0; }
-  .note-editor .note-actions button {
-    font-family: inherit; font-size: 0.62rem; letter-spacing: 0.08em;
-    text-transform: uppercase; background: none; border: none;
-    cursor: pointer; padding: 0; color: #8a6a40;
+  .next-link:hover { text-decoration: underline; }
+
+  .feed-link {
+    font-size: 1rem;
+    color: inherit;
+    opacity: 0.45;
+    transition: opacity 0.15s;
   }
-  .note-editor .note-actions .btn-cancel { color: #b0a898; }
-  .note-editor .note-actions button:focus { outline: 2px solid currentColor; outline-offset: 2px; }
+  .feed-link:hover { opacity: 1; }
 
   /* ── SCROLL HINT ──────────────────────────────────────── */
 
@@ -451,58 +264,8 @@
 
   /* ── MOBILE ───────────────────────────────────────────── */
 
-  @media (max-width: 860px) {
-    .margin-zone { display: none; }
-
-    .swipe-hint {
-      position: absolute; right: 0; top: 0; bottom: 0; width: 18px;
-      background-image: repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent calc(1.55rem - 1px),
-        rgba(140, 120, 100, 0.1) calc(1.55rem - 1px),
-        rgba(140, 120, 100, 0.1) 1.55rem
-      );
-      opacity: 0; transition: opacity 0.5s; pointer-events: none;
-    }
-    section.focused .swipe-hint { opacity: 1; }
-
-    .margin-drawer {
-      position: fixed; top: 0; right: 0;
-      width: min(340px, 88vw); height: 100%;
-      background-image: repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent calc(1.75rem - 1px),
-        rgba(140, 120, 100, 0.12) calc(1.75rem - 1px),
-        rgba(140, 120, 100, 0.12) 1.75rem
-      );
-      background-color: #f0ece4;
-      border-left: 1px solid rgba(140,120,100,0.2);
-      transform: translateX(100%);
-      transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 100; overflow-y: auto;
-      padding: 2.5rem 1.25rem 2rem 1rem;
-    }
-    .margin-drawer.open { transform: translateX(0); }
-
-    .drawer-close {
-      position: absolute; top: 0.75rem; right: 0.75rem;
-      background: none; border: none; font-size: 1rem;
-      cursor: pointer; color: rgba(140,120,100,0.5); padding: 0.25rem; line-height: 1;
-    }
-    .drawer-close:hover { color: #8a7a6a; }
-    .drawer-close:focus { outline: 2px solid #8a6a40; outline-offset: 2px; }
-
-    .margin-drawer .margin-note-item { font-size: 0.8rem; line-height: 1.75rem; }
-    .margin-drawer .note-editor { display: flex; padding: 0; }
-    .margin-drawer .note-editor textarea { font-size: 0.82rem; line-height: 1.75rem; min-height: calc(1.75rem * 4); }
-    .margin-drawer .note-actions button { font-size: 0.7rem; }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     section { opacity: 1 !important; filter: none !important; }
-    .hint, .margin-zone, .swipe-hint, .margin-drawer { transition: none; }
-    .margin-zone::before { transition: none; }
+    .hint { transition: none; }
   }
 </style>

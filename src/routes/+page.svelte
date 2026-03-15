@@ -62,9 +62,18 @@
       document.body.style.background = rgb(lerpColor(c1.bg, c2.bg, t))
       document.body.style.color      = rgb(lerpColor(c1.text, c2.text, t))
 
+      const margin = vh * 0.06
+      const threshold = vh - margin
       for (const s of sections) {
         const rect = s.getBoundingClientRect()
-        const dist = Math.abs(rect.top + rect.height / 2 - mid)
+        let dist
+        if (rect.bottom < 0 || rect.top > vh) {
+          dist = Math.abs(rect.top + rect.height / 2 - mid)
+        } else {
+          const leaveDist = Math.max(0, threshold - rect.bottom)
+          const enterDist = Math.max(0, rect.top - vh * 0.4)
+          dist = Math.max(leaveDist, enterDist)
+        }
         s.style.opacity = String(Math.max(0.06, 1 - dist / (vh * 0.45)))
         const blur = Math.max(0, (dist / vh - 0.15) * 4)
         s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : ''
