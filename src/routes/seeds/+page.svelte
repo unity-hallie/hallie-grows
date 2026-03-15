@@ -17,7 +17,7 @@
     {#each data.explainers as e}
       <li>
         <div class="item">
-          <a href={e.url ?? `/explainers/${e.slug}`} target={e.url ? '_blank' : undefined} rel={e.url ? 'noopener noreferrer' : undefined}>
+          <a href={e.url ?? `/seeds/${e.slug}`} target={e.url ? '_blank' : undefined} rel={e.url ? 'noopener noreferrer' : undefined}>
             {e.title}
           </a>
           {#if e.description}<p class="item-desc">{e.description}</p>{/if}

@@ -105,6 +105,30 @@
   </div>
 </section>
 
+<!-- featured work -->
+{#if data.work.length > 0}
+  <section data-kind="claude" class="featured-work">
+    <div class="text">
+      <div class="item-label">things you might have heard of</div>
+      <div class="featured-list">
+        {#each data.work.filter(w => ['align', 'jamestown'].includes(w.slug)) as w}
+          <a href="/portfolio/{w.slug}" class="featured-item">
+            {#if w.slug === 'jamestown'}
+              <div class="featured-img">
+                <img src="/images/jamestown-header.jpg" alt={w.title} />
+              </div>
+            {:else}
+              <div class="featured-img featured-img-placeholder"></div>
+            {/if}
+            <span class="featured-title">{w.title}</span>
+          </a>
+        {/each}
+      </div>
+      <a class="more-link" href="/portfolio">all work →</a>
+    </div>
+  </section>
+{/if}
+
 <!-- recent feed -->
 {#if data.posts.length > 0}
   {#each data.posts as post}
@@ -232,6 +256,53 @@
     font-style: normal;
     display: block;
   }
+
+  /* featured work */
+  .featured-work { align-items: flex-start; padding-top: 18vh; }
+  .featured-list {
+    display: flex;
+    gap: 1.25rem;
+    margin: 1.25rem 0 1.5rem;
+    flex-wrap: wrap;
+  }
+  .featured-item {
+    flex: 1;
+    min-width: 200px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .featured-img {
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+    border: 1px solid rgba(100, 120, 140, 0.12);
+  }
+  .featured-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+  .featured-item:hover .featured-img img { transform: scale(1.03); }
+  .featured-img-placeholder { background: rgba(100, 120, 140, 0.06); }
+  .featured-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+  .more-link {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: inherit;
+    opacity: 0.35;
+    transition: opacity 0.15s;
+  }
+  .more-link:hover { opacity: 1; }
 
   /* closing */
   .closing { min-height: 50svh; align-items: flex-start; padding-top: 18vh; }
