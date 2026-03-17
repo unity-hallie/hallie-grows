@@ -1,4 +1,6 @@
-import type { Item, Edge, OtterState } from 'alkahest'
+import type { Item, Edge, OtterState, Fluid } from 'alkahest'
+//Bro -- is it possible to set this up to use alkahest matter states? 
+
 
 export type ContentKind = 'post' | 'explainer' | 'work' | 'section'
 export type SectionType = 'hallie' | 'claude'

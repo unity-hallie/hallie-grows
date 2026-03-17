@@ -1,6 +1,7 @@
 import { makeItem, makeEdge } from 'alkahest'
-import type { Item, Edge, OtterState } from 'alkahest'
+import type { Item, Edge, OtterState, Fluid } from 'alkahest'
 import type { ContentMeta, ContentKind } from './types.js'
+import { KINDS } from './types.js'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve } from 'path'
 
@@ -11,6 +12,10 @@ export interface SiteGraph {
   meta: Record<string, ContentMeta>  // keyed by item name
 }
 
+// BRO: is there a way we can start using Alkahest for things like this where the type is uncertain? 
+// IS there a way to use the -- no that would be Wrong. Using the trpes for the typescript and the graph,
+// Right?
+// function emptyGraph(): SiteGraph & Fluid {
 function emptyGraph(): SiteGraph {
   return {
     state: {
@@ -60,6 +65,8 @@ export function addContent(graph: SiteGraph, meta: ContentMeta): SiteGraph {
   }
 }
 
+//BRO -- this feels like a lot of linear params
+
 export function addRelation(
   graph: SiteGraph,
   fromSlug: string,
@@ -82,13 +89,14 @@ export function addRelation(
 }
 
 // Return all content items with metadata, sorted by date desc
+// Without a kind filter, only returns visible kinds (per KINDS registry)
 export function allContent(graph: SiteGraph, kind?: ContentKind): ContentMeta[] {
   const all = [...graph.state.setOfSupport, ...graph.state.usable]
   return all
     .filter((i): i is Item => i.kind === 'item')
     .map(i => graph.meta[i.name])
     .filter(Boolean)
-    .filter(m => !kind || m.kind === kind)
+    .filter(m => kind ? m.kind === kind : KINDS[m.kind]?.visible)
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 

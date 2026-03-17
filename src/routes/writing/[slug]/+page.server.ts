@@ -7,8 +7,8 @@ export const load: PageServerLoad = ({ params }) => {
   const meta = allContent(graph, 'post').find(p => p.slug === params.slug)
   if (!meta) error(404, 'Not found')
 
-  // External posts (Substack) redirect to canonical URL
-  if (meta.url) redirect(302, meta.url)
+  // Posts live here now — redirect to reader
+  redirect(302, `/read/${params.slug}`)
 
   return {
     meta,

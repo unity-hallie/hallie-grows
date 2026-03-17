@@ -1,12 +1,12 @@
 import { json } from '@sveltejs/kit'
 import { loadGraph, saveGraph, addContent, addRelation, allContent, related, getSections } from '$lib/graph/index.js'
-import { fetchSubstackPosts } from '$lib/substack.js'
+import { fetchSubstackPosts, fetchSubstackPostWithSections } from '$lib/substack.js'
 import { otterStep, makeEdge } from 'alkahest'
 import type { Item, Edge } from 'alkahest'
 import type { SiteGraph } from '$lib/graph/index.js'
 import type { ContentKind, SectionType } from '$lib/graph/types.js'
 import type { RequestHandler } from './$types'
-import { SUBSTACK_API_KEY } from '$env/static/private'
+import { SUBSTACK_API_KEY, MCP_SECRET } from '$env/static/private'
 
 // ── HANDLERS ───────────────────────────────────────────────
 
@@ -83,9 +83,38 @@ const handlers: Record<string, Handler> = {
   async sync_substack(_params, graph) {
     const posts = await fetchSubstackPosts(SUBSTACK_API_KEY)
     let g = graph
+
+    // Add post metadata
     for (const post of posts) g = addContent(g, post)
+
+    // Fetch and parse sections for each post (skip if already has sections)
+    let sectionsAdded = 0
+    for (const post of posts) {
+      const existing = getSections(g, post.slug)
+      if (existing.length > 0) continue
+
+      const result = await fetchSubstackPostWithSections(post.slug)
+      if (!result) continue
+
+      for (const section of result.sections) {
+        const sectionSlug = `${post.slug}/${section.sectionIndex}`
+        g = addContent(g, {
+          kind: 'section',
+          slug: sectionSlug,
+          title: `${post.slug} section ${section.sectionIndex}`,
+          date: post.date,
+          sectionType: section.sectionType,
+          sectionIndex: section.sectionIndex,
+          body: section.body,
+          postSlug: post.slug,
+        })
+        g = addRelation(g, post.slug, 'post', 'HAS_SECTION', sectionSlug, 'section', 1.0)
+        sectionsAdded++
+      }
+    }
+
     saveGraph(g)
-    return { added: posts.length }
+    return { posts: posts.length, sectionsAdded }
   },
 
   surface(_params, graph) {
@@ -105,7 +134,13 @@ async function dispatch(method: string, params: Params) {
 
 // ── ROUTES ─────────────────────────────────────────────────
 
+function authorized(request: Request): boolean {
+  const auth = request.headers.get('authorization') ?? ''
+  return auth === `Bearer ${MCP_SECRET}`
+}
+
 export const POST: RequestHandler = async ({ request }) => {
+  if (!authorized(request)) return json({ jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Unauthorized' } }, { status: 401 })
   const body = await request.json()
   const { method, params, id } = body
   try {
@@ -116,7 +151,8 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
+  if (!authorized(request)) return json({ error: 'Unauthorized' }, { status: 401 })
   return json({
     name: 'hallie-grows',
     version: '1.0.0',

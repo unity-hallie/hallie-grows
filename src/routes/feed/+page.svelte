@@ -1,6 +1,10 @@
 <script lang="ts">
   import type { PageData } from './$types'
   let { data }: { data: PageData } = $props()
+
+  function href(item: { kind: string; slug: string }) {
+    return item.kind === 'explainer' ? `/explainers/${item.slug}` : `/read/${item.slug}`
+  }
 </script>
 
 <svelte:head><title>feed — move slow, fix things</title></svelte:head>
@@ -9,14 +13,17 @@
   <h1>feed</h1>
 </div>
 
-{#if data.posts.length === 0}
+{#if data.items.length === 0}
   <p class="empty">nothing yet.</p>
 {:else}
   <ul>
-    {#each data.posts as post}
+    {#each data.items as item}
       <li>
-        <a href="/read/{post.slug}">{post.title}</a>
-        <time>{post.date.slice(0, 10)}</time>
+        <a href={href(item)} target={item.kind === 'explainer' ? '_blank' : undefined} rel={item.kind === 'explainer' ? 'noopener noreferrer' : undefined}>{item.title}</a>
+        <div class="meta">
+          {#if item.kind === 'explainer'}<span class="kind">explainer</span>{/if}
+          <time>{item.date.slice(0, 10)}</time>
+        </div>
       </li>
     {/each}
   </ul>
@@ -32,12 +39,6 @@
     margin: 0 0 0.75rem;
     opacity: 0.4;
   }
-  .desc {
-    font-size: 1.1rem;
-    line-height: 1.7;
-    color: #2a1f0f;
-    margin: 0;
-  }
   ul { list-style: none; padding: 0; margin: 0; }
   li {
     display: flex;
@@ -49,6 +50,8 @@
   }
   a { text-decoration: none; font-size: 1rem; }
   a:hover { text-decoration: underline; }
+  .meta { display: flex; align-items: baseline; gap: 0.6rem; flex-shrink: 0; }
+  .kind { font-size: 0.68rem; opacity: 0.35; letter-spacing: 0.06em; text-transform: uppercase; }
   time { font-size: 0.75rem; opacity: 0.4; white-space: nowrap; font-style: normal; }
   .empty { opacity: 0.4; font-style: italic; }
 </style>
