@@ -1,2 +1,2 @@
-import { redirect } from '@sveltejs/kit'
-export const load = () => redirect(301, '/seeds')
+import { EXPLAINERS } from '$lib/explainers.js'
+export const load = () => ({ explainers: EXPLAINERS })

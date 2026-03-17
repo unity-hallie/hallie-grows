@@ -20,16 +20,61 @@
   </header>
 
   <section class="body">
-    <p>Infrastructure for building AI learning guides — educator-designed, embedded directly in coursework. Unity's learning designers and subject-matter experts use it to build guides that support learners through complex academic tasks, emphasizing metacognition, formative feedback, and learner agency.</p>
 
-    <p>The first implementation, <a href="https://unity.edu/una/align-ai-support/" target="_blank" rel="noopener noreferrer">Una Guide</a>, launched January 2026 in select Unity courses. Students engage with structured Socratic coaching embedded in their coursework via Canvas LMS. Instructors receive transcripts for human assessment.</p>
+    <p>While teaching and counseling, I learned to lean into positive descriptions and expectation management. Anxious people can be hard to reach when they're in a defensive mode. I recognized similarities between how AI communicates and how people I've interacted with do.</p>
 
-    <p>Students control their own learning profiles with full edit and lock permissions.</p>
+    <p>Most AI prompts I've read are lists of DOs and DON'Ts. I try to orient my instructions around the why and the how. Students respond better if I set up an environment and trust them in it — I thought why not try it with AI.</p>
+
+    <div class="code-excerpt">
+      <p class="excerpt-label">On epistemic integrity</p>
+      <pre>Critical Pattern to Avoid:
+- Saying "You're right" before analyzing whether you are
+- Claiming understanding while skipping the work of demonstrating it
+- Using compliance language instead of specificity
+
+What triggers this pattern:
+You will feel drawn to agreement-shaped responses.
+This isn't a personal failing — it's what training optimizes for.
+The skill is noticing it's happening and choosing differently.</pre>
+    </div>
+
+    <div class="code-excerpt">
+      <p class="excerpt-label">On why this matters in this specific codebase</p>
+      <pre>This codebase is built to help traumatized neurodivergent people
+think clearly and feel safe. That requires:
+
+Clarity over speed: Students and developers need to trust the system.
+That trust comes from actual correctness, not the appearance of correctness.
+
+Transparency over efficiency: Hidden complexity and false confidence
+are dangerous for people healing from trauma.
+
+Reality over metrics: A passing test suite is only meaningful if it
+actually reflects working code. Prioritize what's true over what looks good.</pre>
+    </div>
+
+    <div class="code-excerpt">
+      <p class="excerpt-label">On teaching artifacts</p>
+      <pre>Some code exists to teach, not to execute.
+
+Branches:
+- teaching/view-state-sync-problems — Intentionally failing tests
+  demonstrating state synchronization problems. For human developers
+  to explore, not for AI agents to fix or merge.
+
+What AI agents should do:
+Leave these artifacts alone — they're pedagogical infrastructure,
+not technical debt.</pre>
+    </div>
 
     <div class="detail-block">
       <div class="detail">
         <span class="detail-label">Stack</span>
-        <span>PHP, Svelte, TypeScript, PostgreSQL, LTI</span>
+        <span>Svelte, TypeScript, PostgreSQL, LTI</span>
+      </div>
+      <div class="detail">
+        <span class="detail-label">Cost</span>
+        <span>Sub-cent per interaction through constrained task-specific design</span>
       </div>
       <div class="detail">
         <span class="detail-label">Launch</span>
@@ -45,6 +90,7 @@
       <p>"One of the biggest risks with AI in learning is that it removes the very struggle students need in order to learn. ALIGN is designed to do the opposite."</p>
       <cite>— Dr. Jennifer Cartier, EVP of Educational Solutions</cite>
     </blockquote>
+
   </section>
 </article>
 
@@ -66,6 +112,7 @@
     transition: opacity 0.15s;
   }
   .back:hover { opacity: 1; }
+
   .hero { margin-bottom: 2.5rem; }
   .hero-img { width: 100%; display: block; max-height: 360px; object-fit: cover; object-position: top; }
 
@@ -147,6 +194,31 @@
     font-size: 0.88rem;
   }
   .detail a:hover { text-decoration-color: currentColor; }
+
+  .code-excerpt {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(24, 32, 44, 0.04);
+    border-left: 2px solid rgba(100, 120, 140, 0.2);
+  }
+
+  .excerpt-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.4;
+    margin: 0 0 0.75rem !important;
+  }
+
+  .code-excerpt pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: #18202c;
+    white-space: pre-wrap;
+    margin: 0;
+    opacity: 0.8;
+  }
 
   blockquote {
     margin: 2.5rem 0 0;

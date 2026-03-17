@@ -1,394 +1,893 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  let consented = $state(false)
-  let gender = $state('')
-  let customGender = $state('')
-  let monsterName = $state('')
-  let customMonsterName = $state('')
-  let monsterGoal = $state('')
-  let customMonsterGoal = $state('')
+  // ── TYPES ────────────────────────────────────────────────────
+  type Phase = 'setup' | 'legacy-write' | 'pc-turn' | 'gm-react' | 'gm-downtime' | 'death'
+  type CardType = 'item' | 'threat' | 'drop' | 'environment' | 'blank'
 
-  let canvas: HTMLCanvasElement
-  let drawing = $state(false)
-  let hasDrawn = $state(false)
+  interface Card {
+    id: string
+    type: CardType
+    text: string
+  }
 
-  const genders = ['I don\'t care', 'male', 'female', 'transfemme', 'metabinary', 'fluid', 'queer', 'nonbinary', 'butch', 'femme', 'woman', 'man', 'dunno', 'agender', 'negapunk', 'something else']
-  const monsterNames = ['Azrael', 'Pazuzu', 'Leviathan', 'Theodora', 'Moxie', 'Scylla', 'Medusa', 'Brendon']
-  const monsterGoals = ['mete out justice', 'punish unbelievers', 'build a new world', 'reconcile warring people', 'burn it all down', 'something else']
+  interface Location {
+    id: string
+    name: string
+    threat: number
+    revealed: boolean
+    connections: string[]
+    deck: Card[]
+    x: number
+    y: number
+  }
 
-  onMount(() => {
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    ctx.strokeStyle = '#1a1208'
-    ctx.lineWidth = 2
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
+  interface Player {
+    name: string
+    hand: Card[]
+    legacy: string
+    deaths: number
+  }
 
-    let last = { x: 0, y: 0 }
+  // ── STATE ────────────────────────────────────────────────────
+  let phase = $state<Phase>('setup')
+  let players = $state<Player[]>([])
+  let currentPCIdx = $state(0)
+  let locations = $state<Location[]>([])
+  let currentLocationId = $state('')
+  let legacyDeck = $state<string[]>([])
+  let log = $state<string[]>([])
 
-    function pos(e: MouseEvent | Touch) {
-      const r = canvas.getBoundingClientRect()
-      return { x: e.clientX - r.left, y: e.clientY - r.top }
+  // setup form
+  let setupNames = $state(['', ''])
+  let setupFirstLoc = $state('The Bonfire')
+
+  // legacy writing
+  let legacyWriteIdx = $state(0)
+  let legacyText = $state('')
+
+  // gm phase tracking
+  let gmActed = $state<boolean[]>([])
+  let gmDowntimeIdx = $state(1)
+  let downtimeStep = $state<'choose' | 'add-location' | 'add-card' | 'done'>('choose')
+
+  // add location form
+  let newLocName = $state('')
+  let newLocThreat = $state(1)
+
+  // add card form
+  let newCardType = $state<CardType>('item')
+  let newCardText = $state('')
+  let newCardLocation = $state('')
+
+  // writing overlay
+  let writingCard = $state<Card | null>(null)
+  let writingText = $state('')
+
+  // map SVG drag
+  let svgEl = $state<SVGSVGElement | null>(null)
+  let dragging = $state<string | null>(null)
+  let dragOffset = $state({ x: 0, y: 0 })
+
+  // ── DERIVED ──────────────────────────────────────────────────
+  const currentPC = $derived(players[currentPCIdx])
+  const currentLoc = $derived(locations.find(l => l.id === currentLocationId))
+  const adjacent = $derived(
+    currentLoc
+      ? currentLoc.connections.map(id => locations.find(l => l.id === id)).filter(Boolean) as Location[]
+      : []
+  )
+  const gmsInOrder = $derived(
+    players.map((p, i) => ({ p, i })).filter(({ i }) => i !== currentPCIdx)
+  )
+
+  // ── HELPERS ──────────────────────────────────────────────────
+  function uid() { return Math.random().toString(36).slice(2, 9) }
+
+  function addLog(msg: string) {
+    log = [msg, ...log].slice(0, 60)
+  }
+
+  function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]]
     }
+    return a
+  }
 
-    canvas.addEventListener('mousedown', e => {
-      drawing = true
-      last = pos(e)
-    })
-    canvas.addEventListener('mousemove', e => {
-      if (!drawing) return
-      const p = pos(e)
-      ctx.beginPath()
-      ctx.moveTo(last.x, last.y)
-      ctx.lineTo(p.x, p.y)
-      ctx.stroke()
-      last = p
-      hasDrawn = true
-    })
-    canvas.addEventListener('mouseup', () => { drawing = false })
-    canvas.addEventListener('mouseleave', () => { drawing = false })
+  function blankCards(n: number): Card[] {
+    return Array.from({ length: n }, () => ({ id: uid(), type: 'blank' as CardType, text: '' }))
+  }
 
-    canvas.addEventListener('touchstart', e => {
-      e.preventDefault()
-      drawing = true
-      last = pos(e.touches[0])
-    }, { passive: false })
-    canvas.addEventListener('touchmove', e => {
-      e.preventDefault()
-      if (!drawing) return
-      const p = pos(e.touches[0])
-      ctx.beginPath()
-      ctx.moveTo(last.x, last.y)
-      ctx.lineTo(p.x, p.y)
-      ctx.stroke()
-      last = p
-      hasDrawn = true
-    }, { passive: false })
-    canvas.addEventListener('touchend', () => { drawing = false })
+  // ── SETUP ────────────────────────────────────────────────────
+  function startGame() {
+    if (setupNames.some(n => !n.trim()) || setupNames.length < 2) return
+
+    players = setupNames.map(name => ({ name: name.trim(), hand: [], legacy: '', deaths: 0 }))
+
+    const startLoc: Location = {
+      id: uid(),
+      name: setupFirstLoc.trim() || 'The Bonfire',
+      threat: 0,
+      revealed: true,
+      connections: [],
+      deck: blankCards(4),
+      x: 280,
+      y: 200,
+    }
+    locations = [startLoc]
+    currentLocationId = startLoc.id
+
+    legacyDeck = shuffle([
+      'Something you lost that you cannot name',
+      'A vow you made and then broke',
+      'The last face you saw before your first death',
+      'Something carried forward from before the fire',
+      'A title that no longer fits who you became',
+      'The weight of a choice you never made',
+      'What you were before the curse found you',
+      'An oath to someone who no longer remembers',
+      'The thing you were searching for when you first came here',
+      'A name that still echoes in empty rooms',
+      'What you would burn, if you could burn anything',
+      'Something you learned from watching someone else die',
+    ])
+
+    phase = 'legacy-write'
+    legacyWriteIdx = 0
+    legacyText = legacyDeck[0]
+  }
+
+  function addPlayer() { setupNames = [...setupNames, ''] }
+  function removePlayer(i: number) {
+    if (setupNames.length <= 2) return
+    setupNames = setupNames.filter((_, idx) => idx !== i)
+  }
+
+  // ── LEGACY WRITING ───────────────────────────────────────────
+  function submitLegacy() {
+    const text = legacyText.trim()
+    if (!text) return
+    players[legacyWriteIdx].legacy = text
+    legacyWriteIdx++
+    if (legacyWriteIdx >= players.length) {
+      phase = 'pc-turn'
+      gmActed = players.map(() => false)
+      addLog(`The fire dims. ${currentPC.name} descends into the dark.`)
+    } else {
+      legacyText = legacyDeck[legacyWriteIdx % legacyDeck.length]
+    }
+  }
+
+  // ── PC TURN ──────────────────────────────────────────────────
+  function movePC(locId: string) {
+    const loc = locations.find(l => l.id === locId)
+    if (!loc) return
+    currentLocationId = locId
+    if (!loc.revealed) loc.revealed = true
+    if (loc.deck.length < 2) loc.deck = [...loc.deck, ...blankCards(3 - loc.deck.length)]
+    addLog(`${currentPC.name} moves to ${loc.name} (threat ${loc.threat}).`)
+    beginGMReact()
+  }
+
+  function pcTakesAction(action: string) {
+    if (!action.trim()) return
+    addLog(`${currentPC.name}: "${action}"`)
+    beginGMReact()
+  }
+
+  function beginGMReact() {
+    gmActed = players.map(() => false)
+    phase = 'gm-react'
+    addLog('GMs may now draw and react.')
+  }
+
+  // ── GM REACTIONS ─────────────────────────────────────────────
+  function gmDraw(playerIdx: number) {
+    const loc = currentLoc
+    if (!loc || loc.deck.length === 0) return
+    const [card, ...rest] = loc.deck
+    loc.deck = rest
+    players[playerIdx].hand = [...players[playerIdx].hand, card]
+    addLog(`${players[playerIdx].name} draws a card from ${loc.name}.`)
+    if (!card.text) {
+      writingCard = card
+      writingText = ''
+    }
+  }
+
+  function submitCardText() {
+    if (!writingCard || !writingText.trim()) return
+    writingCard.text = writingText.trim()
+    addLog(`A ${writingCard.type} description is written.`)
+    writingCard = null
+  }
+
+  function gmSpend(playerIdx: number, cardId: string) {
+    const card = players[playerIdx].hand.find(c => c.id === cardId)
+    if (!card) return
+    players[playerIdx].hand = players[playerIdx].hand.filter(c => c.id !== cardId)
+    gmActed[playerIdx] = true
+    addLog(`${players[playerIdx].name} spends: "${card.text || `[${card.type}]`}"`)
+  }
+
+  function gmSkipReact(playerIdx: number) {
+    gmActed[playerIdx] = true
+  }
+
+  const allGMsActed = $derived(
+    players.every((_, i) => i === currentPCIdx || gmActed[i])
+  )
+
+  function proceedToDowntime() {
+    phase = 'gm-downtime'
+    gmDowntimeIdx = (currentPCIdx + 1) % players.length
+    downtimeStep = 'choose'
+  }
+
+  // ── GM DOWNTIME ──────────────────────────────────────────────
+  function doAddLocation() {
+    if (!newLocName.trim()) return
+    const from = currentLoc!
+    const angle = Math.random() * Math.PI * 2
+    const dist = 110 + Math.random() * 70
+    const newLoc: Location = {
+      id: uid(),
+      name: newLocName.trim(),
+      threat: newLocThreat,
+      revealed: false,
+      connections: [from.id],
+      deck: blankCards(3),
+      x: Math.max(40, Math.min(560, from.x + Math.cos(angle) * dist)),
+      y: Math.max(30, Math.min(380, from.y + Math.sin(angle) * dist)),
+    }
+    from.connections = [...from.connections, newLoc.id]
+    locations = [...locations, newLoc]
+    addLog(`${players[gmDowntimeIdx].name} reveals a new passage. [${newLoc.name} hidden from PC]`)
+    newLocName = ''
+    newLocThreat = (currentLoc?.threat ?? 0) + 1
+    advanceDowntime()
+  }
+
+  function doAddCard() {
+    if (!newCardText.trim() || !newCardLocation) return
+    const loc = locations.find(l => l.id === newCardLocation)
+    if (!loc) return
+    loc.deck = shuffle([...loc.deck, { id: uid(), type: newCardType, text: newCardText.trim() }])
+    addLog(`${players[gmDowntimeIdx].name} adds a ${newCardType} to ${loc.name}.`)
+    newCardText = ''
+    newCardLocation = ''
+    advanceDowntime()
+  }
+
+  function skipDowntime() { advanceDowntime() }
+
+  function advanceDowntime() {
+    downtimeStep = 'choose'
+    let next = (gmDowntimeIdx + 1) % players.length
+    // skip PC
+    if (next === currentPCIdx) next = (next + 1) % players.length
+    if (next === (currentPCIdx + 1) % players.length && gmDowntimeIdx !== currentPCIdx) {
+      // all GMs had downtime — advance PC
+      currentPCIdx = (currentPCIdx + 1) % players.length
+      phase = 'pc-turn'
+      gmActed = players.map(() => false)
+      addLog(`— ${currentPC.name} steps forward.`)
+    } else {
+      gmDowntimeIdx = next
+    }
+  }
+
+  // ── PC DEATH ─────────────────────────────────────────────────
+  function pcDies() {
+    const pc = currentPC
+    // All hands go to current location
+    players.forEach(p => {
+      if (currentLoc) currentLoc.deck = shuffle([...currentLoc.deck, ...p.hand])
+      p.hand = []
+    })
+    // Discard all legacies
+    players.forEach(p => { p.legacy = '' })
+    pc.deaths++
+    addLog(`${pc.name} has died. All cards return to ${currentLoc?.name}. All legacies are lost.`)
+
+    // Dead player writes new legacy
+    legacyText = `Something that happened, was new, or was learned during ${pc.name}'s run...`
+    legacyWriteIdx = currentPCIdx
+    phase = 'death'
+  }
+
+  function submitDeathLegacy() {
+    const text = legacyText.trim()
+    if (!text) return
+    legacyDeck = shuffle([...legacyDeck, text])
+    addLog(`A new legacy is added to the deck.`)
+    // Draw one per player + 1, distribute, discard rest
+    const drawn = legacyDeck.slice(0, players.length + 1)
+    legacyDeck = legacyDeck.slice(players.length + 1)
+    players.forEach((p, i) => { p.legacy = drawn[i] ?? '' })
+    // PC rotates right of dead player
+    currentPCIdx = (currentPCIdx + 1) % players.length
+    phase = 'pc-turn'
+    gmActed = players.map(() => false)
+    addLog(`Legacies redistributed. ${currentPC.name} takes the torch.`)
+  }
+
+  // ── MAP DRAG ─────────────────────────────────────────────────
+  function startDrag(e: MouseEvent | TouchEvent, locId: string) {
+    e.preventDefault()
+    dragging = locId
+    const pt = 'touches' in e ? e.touches[0] : e
+    const loc = locations.find(l => l.id === locId)!
+    if (!svgEl) return
+    const svgRect = svgEl.getBoundingClientRect()
+    dragOffset = { x: pt.clientX - svgRect.left - loc.x, y: pt.clientY - svgRect.top - loc.y }
+  }
+
+  function onDrag(e: MouseEvent | TouchEvent) {
+    if (!dragging || !svgEl) return
+    const pt = 'touches' in e ? e.touches[0] : e
+    const svgRect = svgEl.getBoundingClientRect()
+    const loc = locations.find(l => l.id === dragging)
+    if (loc) {
+      loc.x = Math.max(40, Math.min(560, pt.clientX - svgRect.left - dragOffset.x))
+      loc.y = Math.max(30, Math.min(370, pt.clientY - svgRect.top - dragOffset.y))
+      locations = [...locations]
+    }
+  }
+
+  function endDrag() { dragging = null }
+
+  // ── PERSIST ──────────────────────────────────────────────────
+  onMount(() => {
+    const saved = localStorage.getItem('age-of-fire-v1')
+    if (saved) {
+      try {
+        const s = JSON.parse(saved)
+        phase = s.phase; players = s.players; currentPCIdx = s.currentPCIdx
+        locations = s.locations; currentLocationId = s.currentLocationId
+        legacyDeck = s.legacyDeck; log = s.log
+        gmActed = s.gmActed ?? players.map(() => false)
+        gmDowntimeIdx = s.gmDowntimeIdx ?? 1
+        legacyWriteIdx = s.legacyWriteIdx ?? 0
+        legacyText = s.legacyText ?? ''
+      } catch {}
+    }
   })
 
-  function clearCanvas() {
-    const ctx = canvas.getContext('2d')!
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    hasDrawn = false
-  }
+  $effect(() => {
+    if (phase !== 'setup') {
+      localStorage.setItem('age-of-fire-v1', JSON.stringify({
+        phase, players, currentPCIdx, locations, currentLocationId,
+        legacyDeck, log, gmActed, gmDowntimeIdx, legacyWriteIdx, legacyText
+      }))
+    }
+  })
 
-  const displayGender = $derived(gender === 'something else' ? customGender : gender)
-  const displayName = $derived(monsterName === 'something else' ? customMonsterName : monsterName)
-  const displayGoal = $derived(monsterGoal === 'something else' ? customMonsterGoal : monsterGoal)
+  function resetGame() {
+    localStorage.removeItem('age-of-fire-v1')
+    phase = 'setup'; players = []; locations = []; log = []
+    setupNames = ['', '']; setupFirstLoc = 'The Bonfire'
+  }
 </script>
 
-<svelte:head>
-  <title>The Name of the Star Is Called Wormwood</title>
-</svelte:head>
+<!-- ── WRITING OVERLAY ──────────────────────────────────────── -->
+{#if writingCard}
+<div class="overlay" onclick={() => {}}>
+  <div class="modal">
+    <p class="modal-prompt">Write a Dark Souls style description for this <em>{writingCard.type}</em>.</p>
+    <p class="modal-hint">Speak of function, origin, loss. Never explain too much.</p>
+    <textarea bind:value={writingText} rows="5" placeholder="Carved from the bones of something that lived before fire..."></textarea>
+    <div class="modal-actions">
+      <button onclick={submitCardText} disabled={!writingText.trim()}>inscribe</button>
+      <button class="ghost" onclick={() => { writingCard = null }}>later</button>
+    </div>
+  </div>
+</div>
+{/if}
 
-<article>
+<!-- ── SETUP ──────────────────────────────────────────────────── -->
+{#if phase === 'setup'}
+<div class="screen setup">
+  <h1>Age of Fire</h1>
+  <p class="subtitle">A dungeon-building game of item descriptions and repeated death.</p>
 
-  <h1>The Name of the Star Is Called Wormwood</h1>
-  <p class="byline">a game by Hallie Larsson</p>
+  <div class="setup-section">
+    <label class="field-label">First Location</label>
+    <input bind:value={setupFirstLoc} placeholder="The Bonfire" />
+  </div>
 
-  <p>We're going to play a game together. Well, you're going to play a game and I'm going to help you by setting down some rules beforehand. (Which is still sortof playing? To me at least?)</p>
+  <div class="setup-section">
+    <label class="field-label">Players</label>
+    {#each setupNames as _, i}
+    <div class="player-row">
+      <input bind:value={setupNames[i]} placeholder="Player {i + 1}" />
+      {#if setupNames.length > 2}
+        <button class="ghost small" onclick={() => removePlayer(i)}>×</button>
+      {/if}
+    </div>
+    {/each}
+    <button class="ghost small" onclick={addPlayer}>+ add player</button>
+  </div>
 
-  <p>First we're going to decide who you are.</p>
+  <button class="primary" onclick={startGame} disabled={setupNames.some(n => !n.trim())}>
+    light the bonfire
+  </button>
+</div>
 
-  <p>OH WAIT I forgot a thing.</p>
+<!-- ── LEGACY WRITE ──────────────────────────────────────────── -->
+{:else if phase === 'legacy-write'}
+<div class="screen legacy">
+  <div class="phase-label">Legacy</div>
+  <h2>{players[legacyWriteIdx]?.name}, write your legacy.</h2>
+  <p class="legacy-prompt-hint">A legacy is what remains of who you were before. Use the prompt below or replace it entirely.</p>
+  <textarea bind:value={legacyText} rows="4"></textarea>
+  <p class="player-count">{legacyWriteIdx + 1} of {players.length}</p>
+  <button class="primary" onclick={submitLegacy} disabled={!legacyText.trim()}>seal it</button>
+</div>
 
-  <p>Before we play, I'm going to ask for your consent to continue. This game touches on themes of self, gender, religion, and apocalypse. I'll add more stuff to this later if I think of it.</p>
+<!-- ── DEATH ─────────────────────────────────────────────────── -->
+{:else if phase === 'death'}
+<div class="screen legacy death-screen">
+  <div class="phase-label death">Death</div>
+  <h2>{players[legacyWriteIdx]?.name}, write a new legacy.</h2>
+  <p class="legacy-prompt-hint">Something that happened, was new, or was learned during this run.</p>
+  <textarea bind:value={legacyText} rows="4" placeholder="Write what will be remembered..."></textarea>
+  <button class="primary" onclick={submitDeathLegacy} disabled={!legacyText.trim()}>add to the deck</button>
+</div>
 
-  <p>A few times through the text, I might not tell you everything up front because I think it might make a better experience for you. I'm going to try hard never to lie to you outright and I really think if you suspend disbelief you'll have an OK time.</p>
+<!-- ── MAIN GAME ──────────────────────────────────────────────── -->
+{:else}
+<div class="game">
 
-  <p>For example, we both know that when I said "I forgot a thing" above I could have totally gone back and changed it. I presented the truth that way in order to help convey a feeling and a tone of conversationality, even if it wasn't a literal truth at that moment.</p>
+  <!-- MAP -->
+  <div class="map-panel">
+    <div class="map-header">
+      <span class="phase-label">{phase === 'pc-turn' ? 'PC Turn' : phase === 'gm-react' ? 'GM Reactions' : 'GM Downtime'}</span>
+      <span class="pc-name">PC: {currentPC?.name}</span>
+    </div>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <svg
+      bind:this={svgEl}
+      class="map-svg"
+      viewBox="0 0 600 400"
+      onmousemove={onDrag}
+      ontouchmove={onDrag}
+      onmouseup={endDrag}
+      ontouchend={endDrag}
+      role="img"
+      aria-label="Dungeon map"
+    >
+      <!-- connections -->
+      {#each locations as loc}
+        {#each loc.connections as connId}
+          {#if locations.find(l => l.id === connId)}
+            {@const other = locations.find(l => l.id === connId)!}
+            <line x1={loc.x} y1={loc.y} x2={other.x} y2={other.y} class="conn-line" />
+          {/if}
+        {/each}
+      {/each}
 
-  <p>If you get badly t-boned, please do tell me — hopefully I can figure out a way to make it better for other people who might play this later? Or if you find this in, like, 10 years and feel like you know how you would do it better? PLEASE do it. Take this and remix it.</p>
+      <!-- nodes -->
+      {#each locations as loc}
+        {@const isCurrent = loc.id === currentLocationId}
+        {@const isAdjacent = adjacent.some(a => a.id === loc.id)}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <g
+          class="loc-node {isCurrent ? 'current' : ''} {isAdjacent ? 'adjacent' : ''} {!loc.revealed ? 'hidden' : ''}"
+          onmousedown={(e) => startDrag(e, loc.id)}
+          ontouchstart={(e) => startDrag(e, loc.id)}
+        >
+          <circle cx={loc.x} cy={loc.y} r={isCurrent ? 18 : 13} />
+          <text x={loc.x} y={loc.y + (isCurrent ? 30 : 24)} class="loc-label">
+            {loc.revealed ? loc.name : '?'}
+          </text>
+          {#if loc.revealed}
+            <text x={loc.x} y={loc.y + 5} class="threat-num">{loc.threat}</text>
+          {/if}
+        </g>
+      {/each}
+    </svg>
+  </div>
 
-  <p>ANYWAY.</p>
+  <!-- ACTION PANEL -->
+  <div class="action-panel">
 
-  <div class="consent-block">
-    <p class="prompt">Do You Consent to Playing?</p>
-    {#if !consented}
-      <div class="consent-buttons">
-        <button class="yes" onclick={() => consented = true}>YES</button>
-        <button class="no" onclick={() => window.history.back()}>NO</button>
+    {#if phase === 'pc-turn'}
+    <!-- PC TURN -->
+    <div class="panel-section">
+      <div class="field-label">Current Location</div>
+      <div class="loc-name">{currentLoc?.name} <span class="threat">threat {currentLoc?.threat}</span></div>
+    </div>
+
+    {#if adjacent.length > 0}
+    <div class="panel-section">
+      <div class="field-label">Move to</div>
+      <div class="move-list">
+        {#each adjacent as loc}
+          <button class="loc-btn" onclick={() => movePC(loc.id)}>
+            {loc.revealed ? loc.name : '???'} <span class="threat">→</span>
+          </button>
+        {/each}
       </div>
-      <p class="no-note">If you selected NO, I can't exactly stop you, but know that I really don't want you playing the game without consenting to it or feeling forced to consent. If someone is standing over your shoulder looking at you with, like, a "C'MON" face on, even if it's a figure of authority in your life, even if it's me, I'd like them to read this next sentence:</p>
-      <p class="no-shout">DON'T FORCE PEOPLE TO PLAY THIS. IT NEGATES THE ENTIRE PURPOSE.</p>
-    {:else}
-      <p class="approved">OK! You selected YES. Keep reading with my approval!</p>
+    </div>
     {/if}
-  </div>
 
-  {#if consented}
-  <hr />
+    <div class="panel-section">
+      <div class="field-label">Take Action</div>
+      <div class="action-row">
+        <input id="pc-action" type="text" placeholder="Describe what you do..." onkeydown={(e) => { if (e.key === 'Enter') { pcTakesAction((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = '' }}} />
+        <button onclick={(e) => { const inp = document.getElementById('pc-action') as HTMLInputElement; pcTakesAction(inp.value); inp.value = '' }}>→</button>
+      </div>
+    </div>
 
-  <p>I'm about to list out a bunch of genders. Pick the one you want to try to embody during our game. If you don't care, that's cool. There's an option for that. If there's not something there that feels like it fits? Feel free to put something else in. My lens is very gender-focused these days and I'm leaning into it.</p>
+    <div class="panel-section">
+      <button class="danger" onclick={pcDies}>PC Dies</button>
+    </div>
 
-  <div class="field-block">
-    <p class="field-label">CURRENT GENDER</p>
-    <div class="chips">
-      {#each genders as g}
-        <button
-          class="chip"
-          class:selected={gender === g}
-          onclick={() => gender = g}
-        >{g}</button>
+    {:else if phase === 'gm-react'}
+    <!-- GM REACTIONS -->
+    <div class="panel-section">
+      <div class="field-label">GMs — Draw &amp; React</div>
+      <p class="hint">Each GM draws a card from the current location. Spend a card to make a move.</p>
+    </div>
+
+    {#each gmsInOrder as { p, i }}
+    <div class="gm-row {gmActed[i] ? 'acted' : ''}">
+      <div class="gm-name">{p.name} {gmActed[i] ? '✓' : ''}</div>
+      <div class="gm-actions">
+        {#if !gmActed[i]}
+          <button class="small" onclick={() => gmDraw(i)} disabled={!currentLoc || currentLoc.deck.length === 0}>
+            draw ({currentLoc?.deck.length ?? 0})
+          </button>
+        {/if}
+        <div class="hand">
+          {#each p.hand as card}
+            <button class="card-btn" onclick={() => gmSpend(i, card.id)} title="Spend this card">
+              <span class="card-type">{card.type}</span>
+              <span class="card-text">{card.text || '(blank)'}</span>
+            </button>
+          {/each}
+        </div>
+        {#if !gmActed[i]}
+          <button class="ghost small" onclick={() => gmSkipReact(i)}>pass</button>
+        {/if}
+      </div>
+    </div>
+    {/each}
+
+    {#if allGMsActed}
+      <button class="primary" onclick={proceedToDowntime}>proceed to downtime →</button>
+    {/if}
+
+    {:else if phase === 'gm-downtime'}
+    <!-- GM DOWNTIME -->
+    <div class="panel-section">
+      <div class="field-label">Downtime — {players[gmDowntimeIdx]?.name}</div>
+      <p class="hint">Take one action, or skip.</p>
+    </div>
+
+    {#if downtimeStep === 'choose'}
+      <div class="downtime-choices">
+        <button onclick={() => { downtimeStep = 'add-location'; newLocThreat = (currentLoc?.threat ?? 0) + 1 }}>Add Location</button>
+        <button onclick={() => { downtimeStep = 'add-card'; newCardLocation = currentLocationId }}>Add Card</button>
+        <button class="ghost" onclick={skipDowntime}>skip</button>
+      </div>
+
+    {:else if downtimeStep === 'add-location'}
+      <div class="form">
+        <label class="field-label">Location Name (hidden from PC)</label>
+        <input bind:value={newLocName} placeholder="The Iron Keep..." />
+        <label class="field-label">Threat (min {(currentLoc?.threat ?? 0) + 1})</label>
+        <input type="number" bind:value={newLocThreat} min={(currentLoc?.threat ?? 0) + 1} />
+        <div class="form-actions">
+          <button onclick={doAddLocation} disabled={!newLocName.trim()}>place it</button>
+          <button class="ghost" onclick={() => downtimeStep = 'choose'}>back</button>
+        </div>
+      </div>
+
+    {:else if downtimeStep === 'add-card'}
+      <div class="form">
+        <label class="field-label">Card Type</label>
+        <select bind:value={newCardType}>
+          <option value="item">Item</option>
+          <option value="threat">Threat</option>
+          <option value="drop">Drop</option>
+          <option value="environment">Environment</option>
+        </select>
+        <label class="field-label">Description</label>
+        <textarea bind:value={newCardText} rows="3" placeholder="Write a Dark Souls style description..."></textarea>
+        <label class="field-label">Shuffle into</label>
+        <select bind:value={newCardLocation}>
+          <option value="">— choose location —</option>
+          {#each locations.filter(l => l.revealed) as loc}
+            <option value={loc.id}>{loc.name}</option>
+          {/each}
+        </select>
+        <div class="form-actions">
+          <button onclick={doAddCard} disabled={!newCardText.trim() || !newCardLocation}>shuffle in</button>
+          <button class="ghost" onclick={() => downtimeStep = 'choose'}>back</button>
+        </div>
+      </div>
+    {/if}
+    {/if}
+
+    <!-- PLAYER LEGACIES -->
+    <div class="panel-section legacy-section">
+      <div class="field-label">Legacies</div>
+      {#each players as p, i}
+        <div class="legacy-row {i === currentPCIdx ? 'is-pc' : ''}">
+          <span class="legacy-name">{p.name}{i === currentPCIdx ? ' (PC)' : ''}</span>
+          <span class="legacy-text">{p.legacy || '—'}</span>
+          {#if p.deaths > 0}<span class="deaths">✝{p.deaths}</span>{/if}
+        </div>
       {/each}
     </div>
-    {#if gender === 'something else'}
-      <input type="text" bind:value={customGender} placeholder="write it in" class="text-input" />
-    {/if}
-    {#if displayGender}
-      <p class="filled">you are: <em>{displayGender}</em></p>
-    {/if}
-  </div>
 
-  <p>OK, now that, maybe, we know a little more about you, let's start fleshing out the place we're playing in.</p>
-
-  <p>This is a game about the apocalypse, like a christian-style apocalypse with angels and demons and disappearing and totalitarianism and all that good bad stuff. You can add your own spin on it, though, and change up the imagery if you want! Here, I'll show you what I mean.</p>
-
-  <p>Draw a picture of something badass that happens in your version of the apocalypse but might not be in someone else's? Maybe it's a rad rainbow angel, or a unicorn with a hoagie for a horn? Don't worry about how well you draw. You only show this to the people you want to.</p>
-
-  <p>OH. Or, if you don't like to draw, you can totally skip it.</p>
-
-  <div class="canvas-block">
-    <canvas bind:this={canvas} width="480" height="320"></canvas>
-    {#if hasDrawn}
-      <button class="clear-btn" onclick={clearCanvas}>clear</button>
-    {/if}
-  </div>
-
-  <p>See? You can totally customize this apocalypse. That is totally going to show up later.</p>
-
-  <p>Which reminds me, can you give it a name?</p>
-
-  <div class="field-block">
-    <p class="field-label">MONSTER NAME</p>
-    <div class="chips">
-      {#each monsterNames as n}
-        <button
-          class="chip"
-          class:selected={monsterName === n}
-          onclick={() => monsterName = n}
-        >{n}</button>
-      {/each}
-      <button
-        class="chip"
-        class:selected={monsterName === 'something else'}
-        onclick={() => monsterName = 'something else'}
-      >something else</button>
+    <!-- LOG -->
+    <div class="log-section">
+      <div class="field-label">Log</div>
+      <ul class="log">
+        {#each log.slice(0, 8) as entry}
+          <li>{entry}</li>
+        {/each}
+      </ul>
     </div>
-    {#if monsterName === 'something else'}
-      <input type="text" bind:value={customMonsterName} placeholder="name your monster" class="text-input" />
-    {/if}
-    {#if displayName}
-      <p class="filled">your monster is called: <em>{displayName}</em></p>
-    {/if}
+
+    <button class="ghost small reset-btn" onclick={resetGame}>reset</button>
   </div>
-
-  <p>Great. And can you please describe what it wants? That way we can figure out how it might act in different circumstances.</p>
-
-  <div class="field-block">
-    <p class="field-label">MONSTER GOAL</p>
-    <p class="field-sub">It's instinct is to:</p>
-    <div class="chips">
-      {#each monsterGoals as g}
-        <button
-          class="chip"
-          class:selected={monsterGoal === g}
-          onclick={() => monsterGoal = g}
-        >{g}</button>
-      {/each}
-    </div>
-    {#if monsterGoal === 'something else'}
-      <input type="text" bind:value={customMonsterGoal} placeholder="what does it want?" class="text-input" />
-    {/if}
-    {#if displayGoal}
-      <p class="filled"><em>{displayName || 'your monster'}</em> wants to: <em>{displayGoal}</em></p>
-    {/if}
-  </div>
-
-  <p>Thank you!!</p>
-
-  <p>OK. So now that we have some flavor, let's figure out a little bit about who you are and WHERE you are.</p>
-
-  <p>Where this happens isn't super important, but it sort of is. From where I'm writing, I'm picturing a modern world a lot like the one that exists around me circa 2019 in Spring, in Maine. The weather is just turning nice. There's a good mix of industry and rural and wilderness and working class and people with lots and lots of money.</p>
-
-  <div class="sketch-note">
-    <p>— this is where the game stops, for now. it's a sketch. 2019. if you find this and want to finish it, please do. take it and remix it. that's always been the point. —</p>
-    <p class="sketch-attribution">— Hallie Larsson</p>
-  </div>
-  {/if}
-
-</article>
+</div>
+{/if}
 
 <style>
-  article {
-    max-width: 580px;
-    margin: 0 auto;
-    padding: 4rem 2rem 8rem;
-    font-size: 1.05rem;
-    line-height: 1.8;
-    color: #1a1208;
-  }
+  :global(body) { background: #0e0c0a; }
 
-  h1 {
-    font-size: 1.3rem;
-    font-weight: 400;
-    line-height: 1.4;
-    margin: 0 0 0.25rem;
-  }
-
-  .byline {
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    opacity: 0.45;
-    margin: 0 0 3rem;
-    font-style: normal;
-  }
-
-  p { margin: 0 0 1.4rem; }
-
-  hr {
-    border: none;
-    border-top: 1px solid rgba(140, 120, 100, 0.2);
-    margin: 2.5rem 0;
-  }
-
-  /* consent */
-  .consent-block { margin: 2rem 0; }
-  .prompt {
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    margin-bottom: 1rem;
-  }
-  .consent-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  .yes, .no {
-    font-family: inherit;
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    padding: 0.5rem 1.5rem;
-    border: 1px solid currentColor;
-    background: none;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-  .yes { color: #2a1f0f; }
-  .yes:hover { background: #2a1f0f; color: #f5f2ec; }
-  .no { color: #8a7a6a; }
-  .no:hover { background: #8a7a6a; color: #f5f2ec; }
-  .no-note { font-size: 0.9rem; opacity: 0.7; }
-  .no-shout {
-    font-size: 0.85rem;
-    letter-spacing: 0.06em;
-    font-weight: 500;
-    margin-top: 0.5rem;
-  }
-  .approved { font-style: italic; opacity: 0.6; font-size: 0.95rem; }
-
-  /* fields */
-  .field-block { margin: 1.5rem 0 2rem; }
-  .field-label {
-    font-size: 0.68rem;
+  /* ── SHARED ─────────────────────────────────────────── */
+  .phase-label {
+    font-size: 0.65rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    opacity: 0.45;
-    margin: 0 0 0.75rem;
-  }
-  .field-sub {
-    font-size: 0.9rem;
-    opacity: 0.6;
-    margin: 0 0 0.75rem;
-    font-style: italic;
-  }
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 0.75rem;
-  }
-  .chip {
-    font-family: inherit;
-    font-size: 0.82rem;
-    padding: 0.3rem 0.75rem;
-    border: 1px solid rgba(140, 120, 100, 0.3);
-    background: none;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.65;
-    transition: all 0.12s;
-    border-radius: 0;
-  }
-  .chip:hover { opacity: 1; border-color: rgba(140, 120, 100, 0.7); }
-  .chip.selected {
-    opacity: 1;
-    background: #2a1f0f;
-    color: #f5f2ec;
-    border-color: #2a1f0f;
-  }
-  .text-input {
-    font-family: inherit;
-    font-size: 0.95rem;
-    background: none;
-    border: none;
-    border-bottom: 1px solid rgba(140, 120, 100, 0.4);
-    padding: 0.25rem 0;
-    width: 100%;
-    color: inherit;
-    margin-top: 0.5rem;
-  }
-  .text-input:focus { outline: none; border-bottom-color: #2a1f0f; }
-  .filled {
-    font-size: 0.9rem;
-    opacity: 0.55;
-    margin: 0.5rem 0 0;
-    font-style: italic;
-  }
-
-  /* canvas */
-  .canvas-block {
-    margin: 1.5rem 0;
-    position: relative;
-  }
-  canvas {
+    color: #d4891a;
+    margin-bottom: 0.5rem;
     display: block;
-    width: 100%;
-    max-width: 480px;
-    height: auto;
-    border: 1px solid rgba(140, 120, 100, 0.25);
-    background: rgba(255,255,255,0.4);
-    cursor: crosshair;
-    touch-action: none;
   }
-  .clear-btn {
-    font-family: inherit;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #8a7a6a;
-    padding: 0.4rem 0;
-    opacity: 0.6;
-  }
-  .clear-btn:hover { opacity: 1; }
+  .phase-label.death { color: #8b2020; }
 
-  /* sketch note */
-  .sketch-note {
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(140, 120, 100, 0.15);
+  input, textarea, select {
+    width: 100%;
+    background: #1a1410;
+    border: 1px solid #3d2b1a;
+    color: #c4a882;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
+    box-sizing: border-box;
+  }
+  textarea { resize: vertical; line-height: 1.6; font-family: Georgia, serif; }
+  input::placeholder, textarea::placeholder { color: #4a3828; }
+
+  button {
+    background: #2a1e12;
+    border: 1px solid #5a3d20;
+    color: #c4a882;
+    padding: 0.45rem 1rem;
     font-size: 0.85rem;
-    line-height: 1.7;
-    opacity: 0.45;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.1s;
+    font-family: inherit;
+  }
+  button:hover { background: #3a2a18; border-color: #d4891a; }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button.primary { background: #3a2200; border-color: #d4891a; color: #f0c870; }
+  button.primary:hover { background: #4a2e00; }
+  button.ghost { background: transparent; border-color: #3d2b1a; color: #7a6550; }
+  button.ghost:hover { color: #c4a882; border-color: #5a3d20; }
+  button.danger { background: #2a0808; border-color: #8b2020; color: #c47070; }
+  button.danger:hover { background: #3a1010; border-color: #c04040; }
+  button.small { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+
+  .field-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7a6550;
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+
+  /* ── OVERLAY ─────────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(8, 6, 4, 0.88);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .modal {
+    background: #110e0a;
+    border: 1px solid #5a3d20;
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+  }
+  .modal-prompt { color: #c4a882; margin-bottom: 0.5rem; }
+  .modal-hint { font-size: 0.82rem; color: #7a6550; margin-bottom: 1rem; font-style: italic; }
+  .modal-actions { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+
+  /* ── SETUP ──────────────────────────────────────────── */
+  .screen {
+    max-width: 480px;
+    margin: 4rem auto;
+    padding: 0 2rem;
+    color: #c4a882;
+  }
+  .screen h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: #d4891a;
+    margin: 0 0 0.5rem;
+  }
+  .subtitle {
+    color: #7a6550;
+    font-size: 0.9rem;
+    margin-bottom: 2.5rem;
     font-style: italic;
   }
-  .sketch-attribution {
-    margin-top: 0.5rem;
-    margin-bottom: 0;
+  .setup-section { margin-bottom: 1.5rem; }
+  .player-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .player-row input { margin: 0; }
+
+  /* ── LEGACY ─────────────────────────────────────────── */
+  .legacy h2 { font-weight: 400; color: #c4a882; margin: 0 0 0.75rem; font-size: 1.3rem; }
+  .legacy-prompt-hint { font-size: 0.85rem; color: #7a6550; margin-bottom: 1rem; font-style: italic; }
+  .player-count { font-size: 0.78rem; color: #5a4030; margin-bottom: 0.75rem; }
+  .death-screen h2 { color: #c47070; }
+
+  /* ── GAME ───────────────────────────────────────────── */
+  .game {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    height: 100svh;
+    color: #c4a882;
+    overflow: hidden;
+  }
+
+  /* MAP */
+  .map-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #2a1e12;
+    overflow: hidden;
+  }
+  .map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #2a1e12;
+  }
+  .pc-name { font-size: 0.8rem; color: #d4891a; }
+
+  .map-svg {
+    flex: 1;
+    width: 100%;
+    background: #0e0c0a;
+    cursor: default;
+    user-select: none;
+  }
+
+  .conn-line {
+    stroke: #2a1e12;
+    stroke-width: 1.5;
+  }
+
+  .loc-node circle {
+    fill: #1a1410;
+    stroke: #3d2b1a;
+    stroke-width: 1.5;
+    cursor: grab;
+    transition: fill 0.15s, stroke 0.15s;
+  }
+  .loc-node.current circle { fill: #2a1800; stroke: #d4891a; stroke-width: 2; }
+  .loc-node.adjacent circle { stroke: #8a6030; }
+  .loc-node.hidden circle { stroke: #2a2020; fill: #120e0c; }
+  .loc-node:hover circle { stroke: #8a6030; }
+
+  .loc-label {
+    fill: #9a8070;
+    font-size: 9px;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  .loc-node.current .loc-label { fill: #d4891a; font-size: 10px; }
+
+  .threat-num {
+    fill: #8b2020;
+    font-size: 8px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+  }
+
+  /* ACTION PANEL */
+  .action-panel {
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .panel-section { margin-bottom: 1.25rem; }
+  .loc-name { font-size: 1.1rem; color: #d4891a; margin-bottom: 0.25rem; }
+  .threat { font-size: 0.75rem; color: #8b2020; }
+  .hint { font-size: 0.8rem; color: #5a4030; font-style: italic; line-height: 1.5; margin-bottom: 0.75rem; }
+
+  .move-list { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.75rem; }
+  .loc-btn { text-align: left; }
+
+  .action-row { display: flex; gap: 0.5rem; }
+  .action-row input { margin: 0; flex: 1; }
+  .action-row button { margin: 0; }
+
+  /* GM rows */
+  .gm-row {
+    border: 1px solid #2a1e12;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    transition: opacity 0.2s;
+  }
+  .gm-row.acted { opacity: 0.45; }
+  .gm-name { font-size: 0.8rem; color: #7a6550; margin-bottom: 0.5rem; }
+  .gm-actions { display: flex; flex-direction: column; gap: 0.4rem; }
+  .hand { display: flex; flex-direction: column; gap: 0.3rem; }
+  .card-btn {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-color: #3d2b1a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .card-btn:hover { border-color: #d4891a; }
+  .card-type { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: #7a6550; }
+  .card-text { font-size: 0.82rem; font-family: Georgia, serif; color: #8a9ba8; line-height: 1.4; }
+
+  /* Downtime */
+  .downtime-choices { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+  .form { display: flex; flex-direction: column; }
+  .form-actions { display: flex; gap: 0.5rem; }
+
+  /* Legacies */
+  .legacy-section { border-top: 1px solid #1a1410; padding-top: 1rem; margin-top: auto; }
+  .legacy-row { margin-bottom: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+  .legacy-row.is-pc .legacy-name { color: #d4891a; }
+  .legacy-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #5a4030; min-width: 80px; }
+  .legacy-text { font-size: 0.82rem; font-family: Georgia, serif; color: #8a9ba8; font-style: italic; flex: 1; }
+  .deaths { font-size: 0.7rem; color: #8b2020; }
+
+  /* Log */
+  .log-section { border-top: 1px solid #1a1410; padding-top: 0.75rem; margin-top: 0.5rem; }
+  .log { list-style: none; padding: 0; margin: 0; }
+  .log li {
+    font-size: 0.78rem;
+    color: #5a4030;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #1a1410;
+    line-height: 1.4;
+  }
+  .log li:first-child { color: #9a8070; }
+
+  .reset-btn { margin-top: 1rem; align-self: flex-start; }
+
+  /* Mobile */
+  @media (max-width: 700px) {
+    .game { grid-template-columns: 1fr; grid-template-rows: 240px 1fr; }
+    .map-panel { border-right: none; border-bottom: 1px solid #2a1e12; }
   }
 </style>

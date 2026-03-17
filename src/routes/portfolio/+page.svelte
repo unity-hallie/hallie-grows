@@ -50,7 +50,7 @@
       {#each rest as w}
         <li>
           <div class="item">
-            <a href={`/portfolio/${w.slug}`}>{w.title}</a>
+            <a href={w.url ?? `/portfolio/${w.slug}`} target={w.url ? '_blank' : undefined} rel={w.url ? 'noopener noreferrer' : undefined}>{w.title}</a>
             {#if w.description}<p class="item-desc">{w.description}</p>{/if}
           </div>
           {#if w.date}<time>{w.date.slice(0, 4)}</time>{/if}
@@ -58,6 +58,10 @@
       {/each}
     </ul>
   {/if}
+
+  <div class="explainers-link">
+    <a href="/explainers">all explainers →</a>
+  </div>
 
 {/if}
 
@@ -149,4 +153,11 @@
   .item-desc { margin: 0.3rem 0 0; font-size: 0.88rem; opacity: 0.55; line-height: 1.6; }
   time { font-size: 0.72rem; opacity: 0.35; white-space: nowrap; font-style: normal; padding-top: 0.2rem; }
   .empty { opacity: 0.4; font-style: italic; }
+
+  .explainers-link {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(100, 120, 140, 0.1);
+  }
+  .explainers-link a { text-decoration: none; font-size: 1rem; font-weight: 500; opacity: 0.5; }
+  .explainers-link a:hover { opacity: 1; text-decoration: underline; }
 </style>

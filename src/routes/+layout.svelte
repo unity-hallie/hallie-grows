@@ -20,7 +20,7 @@
   <a href="/" class="wordmark">move slow, fix things</a>
   <a href="/feed"      class:active={$page.url.pathname.startsWith('/feed')}>feed</a>
   <a href="/portfolio" class:active={$page.url.pathname.startsWith('/portfolio')}>portfolio</a>
-  <a href="/seeds"     class:active={$page.url.pathname.startsWith('/seeds')}>seeds</a>
+  <a href="/explainers" class:active={$page.url.pathname.startsWith('/explainers')}>explainers</a>
   <a href="/resume"    class:active={$page.url.pathname === '/resume'}>resume</a>
 </nav>
 
