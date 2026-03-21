@@ -372,13 +372,15 @@
         </div>
       </div>
 
-      <div class="result-box sindarin-result">
+      {#if true}
         {@const r = getSindarinResult()}
-        <div class="result-word">
-          {#if r.prefix}<span class="result-prefix">{r.prefix}</span>{/if}{r.display}
+        <div class="result-box sindarin-result">
+          <div class="result-word">
+            {#if r.prefix}<span class="result-prefix">{r.prefix}</span>{/if}{r.display}
+          </div>
+          <div class="result-gloss">{r.explanation}</div>
         </div>
-        <div class="result-gloss">{r.explanation}</div>
-      </div>
+      {/if}
     </div>
   </section>
 
