@@ -43,6 +43,13 @@
   let qCase = $state<Morpheme>(qCases[0])
   let qPossessive = $state<Morpheme>(qPoss[0])
 
+  function shuffleQuenya() {
+    qStem = qStems[Math.floor(Math.random() * qStems.length)]
+    qNum = qNumbers[Math.floor(Math.random() * qNumbers.length)]
+    qCase = qCases[Math.floor(Math.random() * qCases.length)]
+    qPossessive = qPoss[Math.floor(Math.random() * qPoss.length)]
+  }
+
   function buildQuenya(): { word: string; gloss: string; parts: { form: string; gloss: string; color: string }[] } | null {
     if (!qStem) return null
 
@@ -303,6 +310,8 @@
           {/each}
         </div>
       </div>
+
+      <button class="shuffle-btn" onclick={shuffleQuenya}>shuffle</button>
 
       <div class="result-box">
         {#if buildQuenya()}
@@ -567,6 +576,23 @@
   .chip.active.poss-chip .chip-gloss { opacity: 0.7; }
   .chip.active.context-chip { background: #1b7a68; border-color: #1b7a68; color: white; }
   .chip.active.context-chip .chip-gloss { opacity: 0.7; }
+
+  .shuffle-btn {
+    font-family: 'Georgia', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: none;
+    border: 1.5px solid #d4c4a8;
+    border-radius: 6px;
+    padding: 0.4rem 1rem;
+    color: #8b6914;
+    cursor: pointer;
+    transition: all 0.18s;
+    align-self: flex-start;
+    margin-top: 0.25rem;
+  }
+  .shuffle-btn:hover { border-color: #b87d2a; color: #b87d2a; }
 
   .result-box {
     background: #faf7f2;

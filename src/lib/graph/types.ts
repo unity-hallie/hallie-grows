@@ -27,8 +27,8 @@ export interface ContentMeta {
   slug: string
   title: string
   date: string        // ISO 8601
-  url?: string        // external URL (e.g. Substack)
-  description?: string
+  url?: string | null  // external URL (e.g. Substack)
+  description?: string | null
   tags?: string[]
   // section-specific (kind === 'section')
   sectionType?: SectionType

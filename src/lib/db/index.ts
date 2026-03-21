@@ -1,5 +1,6 @@
 import postgres from 'postgres'
 import { DATABASE_URL } from '$env/static/private'
+import type { ContentKind } from '$lib/graph/types.js'
 
 // Single connection pool for the process lifetime
 let _sql: ReturnType<typeof postgres> | null = null
@@ -19,7 +20,7 @@ export function db() {
 // ── TYPES ────────────────────────────────────────────────────
 
 export interface ContentRow {
-  kind: string
+  kind: ContentKind
   slug: string
   title: string
   date: string

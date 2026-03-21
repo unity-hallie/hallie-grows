@@ -78,6 +78,8 @@
 
   let activeLine = $state(0)
   let activeWord = $state<number | null>(null)
+  let seen = $state([true, false, false, false, false, false, false])
+  const allSeen = $derived(seen.every(Boolean))
 </script>
 
 <svelte:head>
@@ -106,7 +108,7 @@
   <section class="poem">
     <div class="line-nav">
       {#each lines as line, i}
-        <button class="line-tab" class:active={activeLine === i} onclick={() => { activeLine = i; activeWord = null }}>
+        <button class="line-tab" class:active={activeLine === i} class:seen={seen[i]} onclick={() => { seen[i] = true; activeLine = i; activeWord = null }}>
           {i + 1}
         </button>
       {/each}
@@ -168,9 +170,13 @@
 
   <hr>
 
-  <section class="prose closing-section">
-    <p>Every morpheme in this poem is something you've already built. The grammar came first. The poem is what it makes.</p>
-  </section>
+  {#if allSeen}
+    <section class="full-poem">
+      {#each lines as line}
+        <p class="fp-quenya">{line.quenya}</p>
+      {/each}
+    </section>
+  {/if}
 
   <hr>
 
@@ -235,6 +241,7 @@
     justify-content: center;
   }
   .line-tab:hover { border-color: #b87d2a; }
+  .line-tab.seen { border-color: #d4c4a8; }
   .line-tab.active { background: #b87d2a; border-color: #b87d2a; color: white; }
 
   .line-display { margin-bottom: 1rem; }
@@ -312,11 +319,27 @@
   .prose h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1rem; }
   .prose h3 { font-size: 1rem; font-weight: 700; margin: 2rem 0 0.5rem; color: #b87d2a; }
   .prose p { font-size: 1.02rem; line-height: 1.85; margin: 0 0 1rem; }
-  .prose .pull { font-size: 1.05rem; font-weight: 700; color: #1b7a68; line-height: 1.5; border-left: 3px solid #1b7a68; padding: 0 0 0 1.25rem; margin: 2rem 0; }
-
-  .closing-section { text-align: left; }
-
   hr { border: none; border-top: 1px solid #ede5d8; margin: 2rem auto; max-width: 600px; }
+
+  /* full poem — appears after all lines visited */
+  .full-poem {
+    max-width: 480px;
+    margin: 3rem auto;
+    text-align: center;
+    animation: poemFade 1.2s ease both;
+  }
+  @keyframes poemFade {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fp-quenya {
+    font-size: 1.15rem;
+    font-style: italic;
+    font-weight: 600;
+    line-height: 2.2;
+    margin: 0;
+    color: #251a10;
+  }
 
   .page-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #ede5d8; }
   .nav-link { text-decoration: none; font-weight: 600; font-size: 0.92rem; color: #b87d2a; transition: color 0.15s; }

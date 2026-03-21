@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
 
   let visible = $state(false)
+  let tapped: Record<string, boolean> = $state({ quenya: false, sindarin: false, black: false })
   onMount(() => { visible = true })
 
   const levels = [
@@ -30,9 +31,11 @@
       <h2>Quenya</h2>
       <p class="origin">← Finnish</p>
       <p class="method">Stacks pieces onto the end. The root stays stable. You can always find it.</p>
-      <div class="sample">
+      <div class="sample" class:tapped={tapped.quenya} onclick={() => tapped.quenya = !tapped.quenya} role="button" tabindex="0" onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement)?.click() } }}>
         <span class="word">ciryaron</span>
-        <span class="parse">cirya + -r + -on</span>
+        <span class="morphemes">
+          <span class="chip stem">cirya</span><span class="chip affix">-r</span><span class="chip affix">-on</span>
+        </span>
         <span class="gloss">"of ships"</span>
       </div>
     </div>
@@ -40,9 +43,11 @@
       <h2>Sindarin</h2>
       <p class="origin">← Welsh</p>
       <p class="method">Changes what's already there. The root shifts under grammatical pressure.</p>
-      <div class="sample">
+      <div class="sample" class:tapped={tapped.sindarin} onclick={() => tapped.sindarin = !tapped.sindarin} role="button" tabindex="0" onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement)?.click() } }}>
         <span class="word">i berian</span>
-        <span class="parse">perian → berian (after article)</span>
+        <span class="morphemes">
+          <span class="chip context">i</span><span class="chip mutation">p→b</span><span class="chip stem">erian</span>
+        </span>
         <span class="gloss">"the halfling"</span>
       </div>
     </div>
@@ -50,9 +55,11 @@
       <h2>Black Speech</h2>
       <p class="origin">← imposed</p>
       <p class="method">Same stacking as Quenya. Every morpheme is a command. It failed.</p>
-      <div class="sample">
+      <div class="sample" class:tapped={tapped.black} onclick={() => tapped.black = !tapped.black} role="button" tabindex="0" onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement)?.click() } }}>
         <span class="word">durbatulûk</span>
-        <span class="parse">durb + -at + -ul + -ûk</span>
+        <span class="morphemes">
+          <span class="chip stem">durb</span><span class="chip affix">-at</span><span class="chip affix">-ul</span><span class="chip affix">-ûk</span>
+        </span>
         <span class="gloss">"to rule them all"</span>
       </div>
     </div>
@@ -76,7 +83,7 @@
   </nav>
 
   <section class="coda">
-    <p>Tolkien needed hundreds of words. He wrote a handful of primitives — stems, suffixes, mutations, sound changes — and let them compose. "I always felt like math was beautiful," said someone else who built complex patterns from simple pieces. The method is the same.</p>
+    <p>Tolkien needed hundreds of words. He wrote a handful of primitives — stems, suffixes, mutations, sound changes — and let them compose.</p>
   </section>
 </article>
 
@@ -173,9 +180,34 @@
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  .word { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em; }
-  .parse { font-family: monospace; font-size: 0.75rem; opacity: 0.5; }
+  .word {
+    font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em;
+    transition: opacity 0.3s, font-size 0.3s, transform 0.3s;
+  }
+  .morphemes {
+    display: flex; gap: 0; flex-wrap: wrap; align-items: center;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease, gap 0.3s ease;
+  }
+  .chip {
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
+    padding: 0.15rem 0.4rem; border-radius: 4px;
+    transition: transform 0.3s ease, background 0.3s ease;
+  }
+  .chip.stem { background: rgba(74,103,65,0.12); color: #3a5432; }
+  .chip.affix { background: rgba(184,125,42,0.12); color: #8b6914; }
+  .chip.mutation { background: rgba(27,122,104,0.15); color: #1b7a68; font-style: italic; }
+  .chip.context { background: rgba(27,122,104,0.08); color: #1b7a68; }
+
+  .sample.tapped .word { font-size: 0.75rem; opacity: 0.35; }
+  .sample.tapped .morphemes {
+    max-height: 3rem; opacity: 1; gap: 0.35rem;
+  }
+  .sample.tapped .chip { transform: translateY(0); }
+
   .gloss { font-size: 0.8rem; font-style: italic; opacity: 0.6; }
 
   .thesis {
@@ -183,15 +215,6 @@
     max-width: 580px;
     margin-left: auto;
     margin-right: auto;
-  }
-  .thesis blockquote {
-    font-size: 1.15rem;
-    font-weight: 700;
-    line-height: 1.5;
-    color: #1b7a68;
-    border-left: 3px solid #1b7a68;
-    padding: 0 0 0 1.25rem;
-    margin: 0 0 1.5rem;
   }
   .thesis p {
     font-size: 1rem;

@@ -30,6 +30,7 @@
   }
 
   // ── STATE ────────────────────────────────────────────────────
+  let solo = $state(true)
   let phase = $state<Phase>('setup')
   let players = $state<Player[]>([])
   let currentPCIdx = $state(0)
@@ -39,7 +40,7 @@
   let log = $state<string[]>([])
 
   // setup form
-  let setupNames = $state(['', ''])
+  let setupNames = $state([''])
   let setupFirstLoc = $state('The Bonfire')
 
   // legacy writing
@@ -103,9 +104,13 @@
 
   // ── SETUP ────────────────────────────────────────────────────
   function startGame() {
-    if (setupNames.some(n => !n.trim()) || setupNames.length < 2) return
-
-    players = setupNames.map(name => ({ name: name.trim(), hand: [], legacy: '', deaths: 0 }))
+    if (solo) {
+      const name = setupNames[0]?.trim() || 'Traveler'
+      players = [{ name, hand: [], legacy: '', deaths: 0 }]
+    } else {
+      if (setupNames.some(n => !n.trim()) || setupNames.length < 2) return
+      players = setupNames.map(name => ({ name: name.trim(), hand: [], legacy: '', deaths: 0 }))
+    }
 
     const startLoc: Location = {
       id: uid(),
@@ -179,6 +184,14 @@
   }
 
   function beginGMReact() {
+    if (solo) {
+      // Solo: skip GM reactions, go straight to build phase
+      phase = 'gm-downtime'
+      gmDowntimeIdx = 0
+      downtimeStep = 'choose'
+      addLog('What will you leave behind?')
+      return
+    }
     gmActed = players.map(() => false)
     phase = 'gm-react'
     addLog('GMs may now draw and react.')
@@ -266,6 +279,11 @@
 
   function advanceDowntime() {
     downtimeStep = 'choose'
+    if (solo) {
+      phase = 'pc-turn'
+      addLog(`— ${currentPC.name} steps forward.`)
+      return
+    }
     let next = (gmDowntimeIdx + 1) % players.length
     // skip PC
     if (next === currentPCIdx) next = (next + 1) % players.length
@@ -304,15 +322,23 @@
     if (!text) return
     legacyDeck = shuffle([...legacyDeck, text])
     addLog(`A new legacy is added to the deck.`)
-    // Draw one per player + 1, distribute, discard rest
-    const drawn = legacyDeck.slice(0, players.length + 1)
-    legacyDeck = legacyDeck.slice(players.length + 1)
-    players.forEach((p, i) => { p.legacy = drawn[i] ?? '' })
-    // PC rotates right of dead player
-    currentPCIdx = (currentPCIdx + 1) % players.length
-    phase = 'pc-turn'
-    gmActed = players.map(() => false)
-    addLog(`Legacies redistributed. ${currentPC.name} takes the torch.`)
+    if (solo) {
+      // Solo: draw one legacy for yourself
+      players[0].legacy = legacyDeck[0] ?? ''
+      legacyDeck = legacyDeck.slice(1)
+      phase = 'pc-turn'
+      addLog(`${currentPC.name} wakes at the bonfire. Something is different.`)
+    } else {
+      // Draw one per player + 1, distribute, discard rest
+      const drawn = legacyDeck.slice(0, players.length + 1)
+      legacyDeck = legacyDeck.slice(players.length + 1)
+      players.forEach((p, i) => { p.legacy = drawn[i] ?? '' })
+      // PC rotates right of dead player
+      currentPCIdx = (currentPCIdx + 1) % players.length
+      phase = 'pc-turn'
+      gmActed = players.map(() => false)
+      addLog(`Legacies redistributed. ${currentPC.name} takes the torch.`)
+    }
   }
 
   // ── MAP DRAG ─────────────────────────────────────────────────
@@ -346,6 +372,7 @@
     if (saved) {
       try {
         const s = JSON.parse(saved)
+        solo = s.solo ?? false
         phase = s.phase; players = s.players; currentPCIdx = s.currentPCIdx
         locations = s.locations; currentLocationId = s.currentLocationId
         legacyDeck = s.legacyDeck; log = s.log
@@ -360,7 +387,7 @@
   $effect(() => {
     if (phase !== 'setup') {
       localStorage.setItem('age-of-fire-v1', JSON.stringify({
-        phase, players, currentPCIdx, locations, currentLocationId,
+        solo, phase, players, currentPCIdx, locations, currentLocationId,
         legacyDeck, log, gmActed, gmDowntimeIdx, legacyWriteIdx, legacyText
       }))
     }
@@ -369,12 +396,13 @@
   function resetGame() {
     localStorage.removeItem('age-of-fire-v1')
     phase = 'setup'; players = []; locations = []; log = []
-    setupNames = ['', '']; setupFirstLoc = 'The Bonfire'
+    setupNames = solo ? [''] : ['', '']; setupFirstLoc = 'The Bonfire'
   }
 </script>
 
 <!-- ── WRITING OVERLAY ──────────────────────────────────────── -->
 {#if writingCard}
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div class="overlay" onclick={() => {}}>
   <div class="modal">
     <p class="modal-prompt">Write a Dark Souls style description for this <em>{writingCard.type}</em>.</p>
@@ -392,27 +420,51 @@
 {#if phase === 'setup'}
 <div class="screen setup">
   <h1>Age of Fire</h1>
-  <p class="subtitle">A dungeon-building game of item descriptions and repeated death.</p>
 
-  <div class="setup-section">
-    <label class="field-label">First Location</label>
-    <input bind:value={setupFirstLoc} placeholder="The Bonfire" />
+  <div class="mode-toggle">
+    <button class="mode-btn" class:active={solo} onclick={() => { solo = true; setupNames = [''] }}>solo</button>
+    <button class="mode-btn" class:active={!solo} onclick={() => { solo = false; setupNames = ['', ''] }}>together</button>
   </div>
 
-  <div class="setup-section">
-    <label class="field-label">Players</label>
-    {#each setupNames as _, i}
-    <div class="player-row">
-      <input bind:value={setupNames[i]} placeholder="Player {i + 1}" />
-      {#if setupNames.length > 2}
-        <button class="ghost small" onclick={() => removePlayer(i)}>×</button>
-      {/if}
+  {#if solo}
+    <p class="subtitle">You build the dungeon. You walk through it. You write what you find.</p>
+    <div class="how-it-works">
+      <p>Name locations. Write item descriptions. Explore what you made. When you die, everything you carried returns to where you fell. Your legacy scatters into the deck. You wake at the bonfire carrying someone else's memory — maybe your own.</p>
     </div>
-    {/each}
-    <button class="ghost small" onclick={addPlayer}>+ add player</button>
+  {:else}
+    <p class="subtitle">One of you explores. Everyone else is the dungeon.</p>
+    <div class="how-it-works">
+      <p>Take turns as the PC — the one walking in the dark. Everyone else is a GM: drawing cards, writing what the PC finds, shaping the world around them. Items and threats are described when discovered, not before.</p>
+      <p>You will die. When you do, everything you carried returns to where you fell. Your legacy — a fragment of who you were — scatters into the deck. Someone else will find it next time.</p>
+    </div>
+  {/if}
+
+  <div class="setup-section">
+    <label class="field-label" for="first-loc">First Location</label>
+    <input id="first-loc" bind:value={setupFirstLoc} placeholder="The Bonfire" />
   </div>
 
-  <button class="primary" onclick={startGame} disabled={setupNames.some(n => !n.trim())}>
+  {#if solo}
+    <div class="setup-section">
+      <label class="field-label" for="solo-name">Your name</label>
+      <input id="solo-name" bind:value={setupNames[0]} placeholder="Traveler" aria-label="Your name" />
+    </div>
+  {:else}
+    <div class="setup-section">
+      <label class="field-label">Players</label>
+      {#each setupNames as _, i}
+      <div class="player-row">
+        <input bind:value={setupNames[i]} placeholder="Player {i + 1}" aria-label="Player {i + 1} name" />
+        {#if setupNames.length > 2}
+          <button class="ghost small" onclick={() => removePlayer(i)} aria-label="Remove player {i + 1}">×</button>
+        {/if}
+      </div>
+      {/each}
+      <button class="ghost small" onclick={addPlayer}>+ add player</button>
+    </div>
+  {/if}
+
+  <button class="primary" onclick={startGame} disabled={solo ? false : setupNames.some(n => !n.trim())}>
     light the bonfire
   </button>
 </div>
@@ -445,7 +497,7 @@
   <!-- MAP -->
   <div class="map-panel">
     <div class="map-header">
-      <span class="phase-label">{phase === 'pc-turn' ? 'PC Turn' : phase === 'gm-react' ? 'GM Reactions' : 'GM Downtime'}</span>
+      <span class="phase-label">{phase === 'pc-turn' ? (solo ? 'Explore' : 'PC Turn') : phase === 'gm-react' ? 'GM Reactions' : (solo ? 'Build' : 'GM Downtime')}</span>
       <span class="pc-name">PC: {currentPC?.name}</span>
     </div>
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -515,16 +567,38 @@
     </div>
     {/if}
 
+    {#if solo && currentLoc && currentLoc.deck.length > 0}
     <div class="panel-section">
-      <div class="field-label">Take Action</div>
+      <button onclick={() => gmDraw(0)}>
+        draw from {currentLoc.name} ({currentLoc.deck.length})
+      </button>
+    </div>
+    {/if}
+
+    {#if solo && players[0]?.hand.length > 0}
+    <div class="panel-section">
+      <div class="field-label">In hand</div>
+      <div class="hand">
+        {#each players[0].hand as card}
+          <div class="card-display">
+            <span class="card-type">{card.type}</span>
+            <span class="card-text">{card.text || '(blank)'}</span>
+          </div>
+        {/each}
+      </div>
+    </div>
+    {/if}
+
+    <div class="panel-section">
+      <div class="field-label">{solo ? 'Journal' : 'Take Action'}</div>
       <div class="action-row">
-        <input id="pc-action" type="text" placeholder="Describe what you do..." onkeydown={(e) => { if (e.key === 'Enter') { pcTakesAction((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = '' }}} />
+        <input id="pc-action" type="text" placeholder={solo ? 'What happens here...' : 'Describe what you do...'} onkeydown={(e) => { if (e.key === 'Enter') { pcTakesAction((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = '' }}} />
         <button onclick={(e) => { const inp = document.getElementById('pc-action') as HTMLInputElement; pcTakesAction(inp.value); inp.value = '' }}>→</button>
       </div>
     </div>
 
     <div class="panel-section">
-      <button class="danger" onclick={pcDies}>PC Dies</button>
+      <button class="danger" onclick={pcDies}>{solo ? 'You died' : 'PC Dies'}</button>
     </div>
 
     {:else if phase === 'gm-react'}
@@ -563,10 +637,10 @@
     {/if}
 
     {:else if phase === 'gm-downtime'}
-    <!-- GM DOWNTIME -->
+    <!-- GM DOWNTIME / SOLO BUILD -->
     <div class="panel-section">
-      <div class="field-label">Downtime — {players[gmDowntimeIdx]?.name}</div>
-      <p class="hint">Take one action, or skip.</p>
+      <div class="field-label">{solo ? 'Build' : `Downtime — ${players[gmDowntimeIdx]?.name}`}</div>
+      <p class="hint">{solo ? 'Add to the dungeon, or move on.' : 'Take one action, or skip.'}</p>
     </div>
 
     {#if downtimeStep === 'choose'}
@@ -732,12 +806,48 @@
     color: #d4891a;
     margin: 0 0 0.5rem;
   }
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid #3d2b1a;
+    color: #5a4030;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn:first-child { border-radius: 2px 0 0 2px; }
+  .mode-btn:last-child { border-radius: 0 2px 2px 0; border-left: none; }
+  .mode-btn.active {
+    background: #2a1800;
+    border-color: #d4891a;
+    color: #f0c870;
+  }
   .subtitle {
     color: #7a6550;
     font-size: 0.9rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     font-style: italic;
   }
+  .how-it-works {
+    border-left: 2px solid #3a2e22;
+    padding-left: 1rem;
+    margin-bottom: 2rem;
+  }
+  .how-it-works p {
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: #7a6550;
+    margin: 0 0 0.6rem;
+  }
+  .how-it-works p:last-child { margin-bottom: 0; }
   .setup-section { margin-bottom: 1.5rem; }
   .player-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
   .player-row input { margin: 0; }
@@ -857,6 +967,14 @@
   .card-btn:hover { border-color: #d4891a; }
   .card-type { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: #7a6550; }
   .card-text { font-size: 0.82rem; font-family: Georgia, serif; color: #8a9ba8; line-height: 1.4; }
+  .card-display {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #2a1e12;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin-bottom: 0.3rem;
+  }
 
   /* Downtime */
   .downtime-choices { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
