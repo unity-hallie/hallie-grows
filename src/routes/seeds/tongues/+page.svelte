@@ -59,11 +59,8 @@
   </section>
 
   <section class="thesis">
-    <blockquote>
-      Three invented languages. Three relationships to power. Three theories of what grammar is for.
-    </blockquote>
-    <p>Quenya draws from Finnish — agglutinative, transparent, preserving. Sindarin draws from Welsh — mutating, evolving, worn by time. The Black Speech uses the same machinery as Quenya, but every piece is about domination. And the orcs couldn't maintain it.</p>
-    <p>This is a primer built for people who are interested in <em>how languages work</em>, not just what the Elvish words mean. It moves through three levels, each one earning the next.</p>
+    <p>Quenya draws from Finnish — agglutinative, transparent, preserving. Sindarin draws from Welsh — mutating, worn by time. The Black Speech uses the same machinery as Quenya, but the orcs couldn't maintain it.</p>
+    <p>A primer for how the languages work, not what the words mean.</p>
   </section>
 
   <nav class="levels">

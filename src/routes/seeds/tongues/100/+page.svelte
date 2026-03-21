@@ -325,9 +325,8 @@
   <!-- ═══════════════════════════════════ PROSE: WHAT JUST HAPPENED -->
   <section class="prose">
     <h2>What you just did</h2>
-    <p>You built a Quenya word by selecting pieces and attaching them in order: <strong>stem + number + case + possessive</strong>. Each piece has one job. They don't interfere with each other. The stem stays the same no matter what you attach to it.</p>
-    <p>This is <strong>agglutination</strong> — from Latin <em>agglutinare</em>, "to glue together." Finnish works the same way. Turkish. Swahili. Hungarian. The morphemes are transparent and composable.</p>
-    <p class="pull">The locative triad — <em>-sse</em> (at), <em>-nna</em> (toward), <em>-llo</em> (from) — mirrors Finnish's <em>-ssa</em>, <em>-seen</em>, <em>-sta</em>. Same logic, different sounds. Tolkien heard Finnish and never recovered.</p>
+    <p><strong>Stem + number + case + possessive.</strong> Each piece has one job. The stem stays the same no matter what you attach. This is agglutination — "gluing together." Finnish works the same way.</p>
+    <p class="pull">The locative triad — <em>-sse</em> (at), <em>-nna</em> (toward), <em>-llo</em> (from) — mirrors Finnish's <em>-ssa</em>, <em>-seen</em>, <em>-sta</em>.</p>
   </section>
 
   <hr>
@@ -386,12 +385,11 @@
 
   <!-- ═══════════════════════════════════ PROSE: MUTATION -->
   <section class="prose">
-    <h2>A different strategy entirely</h2>
-    <p>Sindarin doesn't add pieces to the end. It changes what's already there. The article <em>i</em> (the) triggers <strong>soft mutation</strong> — voiceless stops become voiced, voiced stops become fricatives or vanish. <em>perian</em> → <em>i berian</em>. The grammar is in the shift, not in a suffix.</p>
-    <p>Welsh does the same thing. <em>pen</em> (head) → <em>fy mhen</em> (my head). Tolkien saw Welsh words on coal trucks as a child and the sound never let him go.</p>
+    <h2>A different strategy</h2>
+    <p>Sindarin doesn't add pieces — it changes what's already there. The article <em>i</em> triggers <strong>soft mutation</strong>: <em>perian</em> → <em>i berian</em>. The grammar is in the shift. Welsh does the same thing. <em>pen</em> (head) → <em>fy mhen</em> (my head).</p>
 
-    <h3>Plurals: the inside changes too</h3>
-    <p>Sindarin plurals don't add endings — they shift the internal vowels. Like English <em>goose → geese</em>, but systematic.</p>
+    <h3>Plurals shift too</h3>
+    <p>No endings — the internal vowels change. Like English <em>goose → geese</em>, but systematic.</p>
 
     <div class="plural-demo">
       {#each plurals as p, i}
@@ -447,9 +445,8 @@
   <!-- ═══════════════════════════════════ PROSE: BLACK SPEECH -->
   <section class="prose">
     <h2>Same machinery, opposite intent</h2>
-    <p>Look at <em>durbatulûk</em>. It stacks morphemes just like Quenya does: root + purpose + object + quantifier. The agglutinative principle is identical. But every root is a verb of coercion — <em>durb</em> (rule), <em>gimb</em> (find), <em>thrak</em> (drag), <em>krimp</em> (bind).</p>
-    <p>The phonology does the rest. Back vowels (<em>u, û</em>) where Quenya uses bright ones (<em>a, e, i</em>). Heavy closed syllables (<em>nazg, thrak, krimp</em>) where Quenya flows open. Tolkien engineered it to feel like a boot on a throat.</p>
-    <p class="pull">Sauron designed the Black Speech as a universal language for all his servants. It failed. The orcs couldn't maintain it. You cannot impose a language from above — language comes from community, not from power.</p>
+    <p><em>durbatulûk</em> stacks morphemes just like Quenya: root + purpose + object + quantifier. But every root is coercion — <em>durb</em> (rule), <em>thrak</em> (drag), <em>krimp</em> (bind). Back vowels where Quenya uses bright ones. Heavy closed syllables where Quenya flows open.</p>
+    <p>Sauron designed it as a universal language for his servants. The orcs couldn't maintain it.</p>
   </section>
 
   <hr>

@@ -150,10 +150,10 @@
   </section>
 
   <section class="prose">
-    <h2>Five tenses, two verb classes</h2>
-    <p>Quenya verbs come in two types: <strong>basic verbs</strong> with consonant-final roots (<em>quet-, tul-, car-</em>) and <strong>A-stem verbs</strong> with roots ending in <em>-a</em> (<em>lanta-, ora-</em>). They conjugate differently but follow the same five-tense system.</p>
-    <p>The past tense is the most interesting. Basic verbs use <strong>nasal infixion</strong> — inserting an <em>n</em> before the final consonant: <em>quet-</em> → <em>quentë</em>. This is Latin/Greek, not Finnish. The verb system is where Quenya stops being Finnish and starts being Classical.</p>
-    <p class="pull">The perfect tense prefixes a copy of the stem vowel (the "augment") and adds <em>-ië</em>. This is straight from Ancient Greek: λέλυκα (leluka, "I have loosened"). Tolkien the classicist, not the Fenno-phile.</p>
+    <h2>Two verb classes, five tenses</h2>
+    <p><strong>Basic verbs</strong> have consonant-final roots (<em>quet-, tul-, car-</em>). <strong>A-stem verbs</strong> end in <em>-a</em> (<em>lanta-, ora-</em>). Different conjugation, same tense system.</p>
+    <p>The past tense uses <strong>nasal infixion</strong> — an <em>n</em> inserted before the final consonant: <em>quet-</em> → <em>quentë</em>. This is Latin/Greek, not Finnish. The verb system is where Quenya changes its source language.</p>
+    <p class="pull">The perfect tense augment — prefixing a copy of the stem vowel — comes from Ancient Greek: λέλυκα (leluka, "I have loosened").</p>
   </section>
 
   <hr>
@@ -179,9 +179,7 @@
   </section>
 
   <section class="prose">
-    <h2>This is the agglutinative argument</h2>
-    <p><em>utúvienyes</em> carries everything — tense (perfect), aspect (completed), subject (I), object (it) — in five transparent morphemes glued onto one root. No separate words for "I" or "it" or "have." The verb <em>is</em> the sentence.</p>
-    <p>Turkish does the same thing. <em>yapabilecekmiydim</em> = "was I going to be able to do it?" Finnish does it. Inuktitut does it. The morphemes compose. The seams stay clean.</p>
+    <p>Five morphemes. Tense, aspect, subject, object — all in one word. No separate "I" or "it" or "have." Turkish does the same: <em>yapabilecekmiydim</em> = "was I going to be able to do it?" The morphemes compose. The seams stay clean.</p>
   </section>
 
   <hr>
@@ -231,10 +229,9 @@
 
   <section class="prose">
     <h2>The past tense tells the story</h2>
-    <p>Look at the past tense of <em>car-</em> (to do): <strong>agor</strong>. That's not a suffix — the whole word changed. The root vowel shifted, a prefix appeared. This is ablaut, the same process that gives English <em>sing/sang/sung</em> and <em>drive/drove/driven</em>.</p>
-    <p>Meanwhile <em>ped-</em> (speak) becomes <em>pent</em> — nasal infixion, where an <em>n</em> appears inside the root. Same mechanism as Quenya's past tense, but the results look more different because Sindarin has worn further from the shared ancestor.</p>
-    <p class="pull">Quenya and Sindarin both descend from Common Eldarin. Quenya was preserved in the Blessed Realm — change was slow. Sindarin evolved in Middle-earth for millennia. The difference is what time does to a language.</p>
-    <p>When the Noldor returned to Middle-earth, they found Sindarin so changed they could barely understand it. Then Thingol banned Quenya entirely — after learning of the Kinslaying. The Noldor adopted Sindarin for daily speech. Quenya survived as a language of lore, ceremony, and names.</p>
+    <p>Past tense of <em>car-</em> (to do): <strong>agor</strong>. Not a suffix — the whole word changed. Root vowel shift, prefix. Ablaut, like English <em>sing/sang/sung</em>. Meanwhile <em>ped-</em> becomes <em>pent</em> — nasal infixion, an <em>n</em> appearing inside the root.</p>
+    <p class="pull">Both languages descend from Common Eldarin. Quenya was preserved in the Blessed Realm. Sindarin evolved in Middle-earth for millennia.</p>
+    <p>When the Noldor returned, Sindarin had changed so much they could barely understand it. Thingol banned Quenya after learning of the Kinslaying. Quenya survived as a language of lore and names.</p>
   </section>
 
   <hr>

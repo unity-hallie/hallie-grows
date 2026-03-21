@@ -150,28 +150,26 @@
   <section class="prose">
     <h2>What to notice</h2>
 
-    <h3>ómaryo — three morphemes deep</h3>
-    <p><em>óma</em> (voice) + <em>-rya</em> (her) + <em>-o</em> (genitive). "Of her voice." The possessive pronoun and the case ending both attach to the noun. One word carries what English needs four for.</p>
+    <h3>ómaryo</h3>
+    <p><em>óma</em> (voice) + <em>-rya</em> (her) + <em>-o</em> (genitive). One word where English needs four.</p>
 
-    <h3>súrinen — the instrumental in action</h3>
-    <p><em>súre</em> (wind) + <em>-nen</em> (by means of). "In the wind" — but literally "by-wind-means." The instrumental case you built in 100 is doing real poetic work here. The leaves fall <em>by means of</em> the wind. The grammar carries the causation.</p>
+    <h3>súrinen</h3>
+    <p><em>súre</em> (wind) + <em>-nen</em> (instrumental). Not "in the wind" — "by-wind-means." The grammar carries the causation.</p>
 
-    <h3>aldaron — three pieces, one word</h3>
-    <p><em>alda</em> (tree) + <em>-r</em> (plural) + <em>-on</em> (genitive). "Of trees." The plural genitive. You've built this exact form in the word builder.</p>
+    <h3>aldaron</h3>
+    <p><em>alda</em> (tree) + <em>-r</em> (plural) + <em>-on</em> (genitive). You built this exact form in 100.</p>
 
-    <h3>Namárië itself</h3>
-    <p><em>ná</em> (be, imperative) + <em>márië</em> (goodness). "Be well." A farewell that is literally a wish for the other's wellbeing. The grammar is the meaning.</p>
+    <h3>Rómello</h3>
+    <p><em>Rómen</em> (East) + <em>-llo</em> (ablative). Valimar is lost <em>from the perspective of</em> those in Middle-earth. The ablative carries exile.</p>
 
-    <h3>Rómello — the ablative doing what it was built for</h3>
-    <p><em>Rómen</em> (the East) + <em>-llo</em> (ablative, "from"). "From the East." The case you learned as "away from" in the case table is here naming the direction of loss. Valimar is lost <em>from the perspective of</em> those in the East — those in Middle-earth. The ablative carries exile.</p>
+    <h3>Namárië</h3>
+    <p><em>ná</em> (be) + <em>márië</em> (goodness). Two pieces. Be well.</p>
   </section>
 
   <hr>
 
   <section class="prose closing-section">
-    <h2>The pieces were always there</h2>
-    <p>Every morpheme in this poem is something you've already seen. The cases, the number markers, the possessive suffixes, the verb forms. Tolkien didn't write this poem and then invent a grammar to explain it. He built the grammar first — the composable pieces — and the poem is what they make when a master assembles them.</p>
-    <p class="pull">The language came first. The story grew to house it. And the farewell — <em>Namárië</em> — is a wish built from two pieces glued together. Be well.</p>
+    <p>Every morpheme in this poem is something you've already built. The grammar came first. The poem is what it makes.</p>
   </section>
 
   <hr>
