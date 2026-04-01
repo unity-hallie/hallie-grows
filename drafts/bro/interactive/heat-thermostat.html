@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>grief engine: heat thermostat</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1816; color: #c4b9a8; font-family: monospace; overflow: hidden; }
+  canvas { display: block; cursor: crosshair; }
+  #info {
+    position: fixed; bottom: 12px; left: 12px; font-size: 11px; opacity: 0.6;
+    line-height: 1.6;
+  }
+  #title {
+    position: fixed; top: 12px; left: 12px; font-size: 13px; opacity: 0.8;
+  }
+  #phase {
+    position: fixed; top: 12px; right: 12px; font-size: 11px; opacity: 0.7;
+    text-align: right; line-height: 1.6;
+  }
+</style>
+</head><body>
+<div id="title">grief engine: heat thermostat</div>
+<div id="info">
+  click a node to add heat<br>
+  watch it diffuse through edges<br>
+  colors derive from eigenfrequency<br>
+  <br>
+  salt (settled) · fluid (alive) · volatile (seeking)
+</div>
+<div id="phase"></div>
+<canvas id="c"></canvas>
+<script>
+const W = window.innerWidth, H = window.innerHeight;
+const canvas = document.getElementById('c');
+canvas.width = W; canvas.height = H;
+const ctx = canvas.getContext('2d');
+
+// A small grief-themed graph
+const nodes = [
+  { id: 'grief', x: W*0.5, y: H*0.35 },
+  { id: 'anger', x: W*0.3, y: H*0.2 },
+  { id: 'denial', x: W*0.7, y: H*0.2 },
+  { id: 'bargaining', x: W*0.25, y: H*0.5 },
+  { id: 'depression', x: W*0.75, y: H*0.5 },
+  { id: 'acceptance', x: W*0.5, y: H*0.7 },
+  { id: 'hope', x: W*0.35, y: H*0.8 },
+  { id: 'memory', x: W*0.65, y: H*0.8 },
+  { id: 'love', x: W*0.15, y: H*0.35 },
+  { id: 'fear', x: W*0.85, y: H*0.35 },
+];
+
+// Edges with conductance (confidence)
+const edges = [
+  ['grief', 'anger', 0.8],
+  ['grief', 'denial', 0.7],
+  ['grief', 'bargaining', 0.6],
+  ['grief', 'depression', 0.7],
+  ['grief', 'acceptance', 0.5],
+  ['anger', 'bargaining', 0.6],
+  ['anger', 'love', 0.4],
+  ['denial', 'depression', 0.5],
+  ['denial', 'fear', 0.6],
+  ['bargaining', 'acceptance', 0.7],
+  ['bargaining', 'hope', 0.5],
+  ['depression', 'acceptance', 0.4],
+  ['depression', 'memory', 0.6],
+  ['acceptance', 'hope', 0.8],
+  ['acceptance', 'memory', 0.7],
+  ['hope', 'love', 0.5],
+  ['memory', 'fear', 0.3],
+  ['love', 'fear', 0.2],
+];
+
+// State
+const heat = {};
+const confidence = {};
+nodes.forEach(n => { heat[n.id] = 0; confidence[n.id] = 0.5; });
+heat['grief'] = 0.3; // start with some warmth
+
+const nodeMap = {};
+nodes.forEach(n => nodeMap[n.id] = n);
+
+// Pathologic palette mapped to frequency
+function freqToColor(f) {
+  f = Math.max(0, Math.min(1, f));
+  const stops = [
+    [0.0, [26, 24, 22]],
+    [0.15, [74, 90, 106]],
+    [0.35, [106, 90, 74]],
+    [0.55, [181, 139, 76]],
+    [0.75, [160, 90, 74]],
+    [1.0, [196, 138, 122]],
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (f <= stops[i+1][0]) {
+      const t = (f - stops[i][0]) / (stops[i+1][0] - stops[i][0]);
+      const c = stops[i][1].map((v, j) => Math.round(v + t * (stops[i+1][1][j] - v)));
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+  }
+  return `rgb(196,138,122)`;
+}
+
+function phase(h, c) {
+  const ratio = c > 0 ? h / c : 0;
+  if (ratio < 0.3) return 'salt';
+  if (ratio < 1.0) return 'fluid';
+  return 'volatile';
+}
+
+function phaseColor(p) {
+  return p === 'salt' ? '#4a5a6a' : p === 'fluid' ? '#b58b4c' : '#a05a4a';
+}
+
+// Diffusion step
+function diffuse() {
+  const delta = {};
+  nodes.forEach(n => delta[n.id] = 0);
+
+  edges.forEach(([a, b, cond]) => {
+    const flow = (heat[a] - heat[b]) * cond * 0.08;
+    delta[a] -= flow;
+    delta[b] += flow;
+  });
+
+  // Natural cooling
+  nodes.forEach(n => {
+    heat[n.id] = Math.max(0, heat[n.id] + delta[n.id] - 0.002);
+  });
+}
+
+// Draw
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Edges
+  edges.forEach(([a, b, cond]) => {
+    const na = nodeMap[a], nb = nodeMap[b];
+    const avgHeat = (heat[a] + heat[b]) / 2;
+    ctx.beginPath();
+    ctx.moveTo(na.x, na.y);
+    ctx.lineTo(nb.x, nb.y);
+    ctx.strokeStyle = freqToColor(avgHeat);
+    ctx.lineWidth = 0.5 + cond * 2;
+    ctx.globalAlpha = 0.3 + avgHeat * 0.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Nodes
+  nodes.forEach(n => {
+    const h = heat[n.id];
+    const p = phase(h, confidence[n.id]);
+    const r = 8 + h * 30;
+
+    // Glow
+    if (h > 0.1) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 15, 0, Math.PI * 2);
+      ctx.fillStyle = freqToColor(h);
+      ctx.globalAlpha = h * 0.2;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Node
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = freqToColor(h);
+    ctx.fill();
+    ctx.strokeStyle = phaseColor(p);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#c4b9a8';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = 0.7;
+    ctx.fillText(n.id, n.x, n.y + r + 14);
+    ctx.globalAlpha = 1;
+  });
+
+  // Phase display
+  const phaseDiv = document.getElementById('phase');
+  let phaseText = '';
+  nodes.forEach(n => {
+    const h = heat[n.id];
+    const p = phase(h, confidence[n.id]);
+    if (h > 0.05) {
+      phaseText += `<span style="color:${phaseColor(p)}">${n.id}: ${p} (${h.toFixed(2)})</span><br>`;
+    }
+  });
+  phaseDiv.innerHTML = phaseText;
+}
+
+// Click to add heat
+canvas.addEventListener('click', (e) => {
+  const mx = e.clientX, my = e.clientY;
+  let closest = null, minDist = Infinity;
+  nodes.forEach(n => {
+    const d = Math.hypot(n.x - mx, n.y - my);
+    if (d < minDist) { minDist = d; closest = n; }
+  });
+  if (closest && minDist < 60) {
+    heat[closest.id] = Math.min(1.5, heat[closest.id] + 0.3);
+  }
+});
+
+// Main loop
+function tick() {
+  diffuse();
+  draw();
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body></html>
