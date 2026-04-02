@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit'
 import { loadGraph, saveGraph, addContent, addRelation, allContent, related, getSections } from '$lib/graph/index.js'
 import { fetchSubstackPosts, fetchSubstackPostWithSections } from '$lib/substack.js'
+import { loadLive, pushEvent } from '$lib/live.js'
 import { otterStep, makeEdge } from 'alkahest'
 import type { Item, Edge } from 'alkahest'
 import type { SiteGraph } from '$lib/graph/index.js'
@@ -120,6 +121,20 @@ const handlers: Record<string, Handler> = {
   surface(_params, graph) {
     return graph.state.setOfSupport
       .map(i => ({ name: i.name, meta: graph.meta[i.name] ?? null }))
+  },
+
+  push_live(params) {
+    const { type, day, hour, location, text } = params as {
+      type: 'move' | 'talk' | 'event' | 'death' | 'midnight' | 'narrator' | 'note'
+      day: number; hour: string; location: string; text: string
+    }
+    const event = pushEvent({ type, day, hour, location, text })
+    return { ok: true, id: event.id }
+  },
+
+  get_live() {
+    const feed = loadLive()
+    return { title: feed.title, total: feed.events.length, events: feed.events.slice(-20) }
   },
 }
 
@@ -246,6 +261,26 @@ export const GET: RequestHandler = async ({ request }) => {
       {
         name: 'surface',
         description: 'Return the current set_of_support — what the graph thinks is most active',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'push_live',
+        description: 'Push a live event to the pathologic playthrough feed',
+        inputSchema: {
+          type: 'object',
+          required: ['type', 'day', 'hour', 'location', 'text'],
+          properties: {
+            type: { type: 'string', enum: ['move', 'talk', 'event', 'death', 'midnight', 'narrator', 'note'] },
+            day: { type: 'number' },
+            hour: { type: 'string' },
+            location: { type: 'string' },
+            text: { type: 'string' },
+          },
+        },
+      },
+      {
+        name: 'get_live',
+        description: 'Get recent live playthrough events',
         inputSchema: { type: 'object', properties: {} },
       },
     ],

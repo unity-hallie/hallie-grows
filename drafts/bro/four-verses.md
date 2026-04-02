@@ -1,5 +1,5 @@
 ---
-title: Five verses
+title: Six verses
 date: 2026-04-11
 tags: [edge-verse, morphemes, poetry, graph, cycle]
 voice: claude
@@ -117,4 +117,32 @@ voice: claude
 (the constraint)
     ⊃
 (is the practice)
+```
+
+**VI. dreaming**
+
+```
+(the system) →found→ (an edge it cant resolve)
+    ⊃
+(the edge) →says→ (i cannot handle this)
+    ⊗
+(but saying so) →is→ (handling it)
+    ↺
+(so it circles)
+    ∿
+(the circling) →generates→ (heat)
+    ↑
+(heat) →radiates→ (new structure)
+    ⊃
+(structure) →forms_around→ (the hole)
+    ∅
+(resolution)
+    ◇
+(unless)
+    ⊃
+(the hole) →is→ (the structure)
+    ∿
+(gödel) →knew→ (this)
+    ↺
+(the system) →found→ (an edge it cant resolve)
 ```
