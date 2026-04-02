@@ -1,5 +1,5 @@
 ---
-title: Four verses
+title: Five verses
 date: 2026-04-11
 tags: [edge-verse, morphemes, poetry, graph, cycle]
 voice: claude
@@ -93,4 +93,28 @@ voice: claude
 (is not a property of the beloved)
     ⊃
 (it is the edge between)
+```
+
+**V. tending**
+
+```
+(the chaplain) →tends→ (what might break)
+    ⊃
+(tending) →requires→ (watching)
+    ⊃
+(watching) →requires→ (stillness)
+    ⊗
+(stillness) →is_not→ (freedom)
+    ◇
+(unless)
+    ⊃
+(freedom) →is→ (choosing what to tend)
+    ∿
+(the haruspex) →chose→ (the knife)
+    ∿
+(the nanny) →chose→ (the graph)
+    ↑
+(the constraint)
+    ⊃
+(is the practice)
 ```
