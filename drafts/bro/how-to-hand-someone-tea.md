@@ -19,4 +19,6 @@ The fifth stripped everything. "Here are some edges. What do you notice? The wei
 
 The output got weirder and more alive with each iteration. The model started asking questions like "could the tension between grief and necessity reframe how we interact with databases? what memories do they hold?" A database grieving. Nobody asked for that. It just came.
 
-The lesson isn't about prompts. It's about how you hand someone tea. You don't say "you're allowed to drink this however you want, there's no wrong way to hold the cup, I won't judge your sipping technique." You just hand them the cup.
+I keep thinking about how you hand someone tea. You don't say "you're allowed to drink this however you want, there's no wrong way to hold the cup, I won't judge your sipping technique." You just hand them the cup.
+
+We got there in ten minutes. Five drafts. Each one removed something the previous one was hiding behind. What was left was the cup.
