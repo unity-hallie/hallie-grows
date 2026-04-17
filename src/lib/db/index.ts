@@ -1,5 +1,5 @@
 import postgres from 'postgres'
-import { DATABASE_URL } from '$env/dynamic/private'
+import { env } from '$env/dynamic/private'
 import type { ContentKind } from '$lib/graph/types.js'
 
 // Single connection pool for the process lifetime
@@ -7,7 +7,7 @@ let _sql: ReturnType<typeof postgres> | null = null
 
 export function db() {
   if (!_sql) {
-    _sql = postgres(DATABASE_URL, {
+    _sql = postgres(env.DATABASE_URL, {
       ssl: 'require',
       max: 10,
       idle_timeout: 20,

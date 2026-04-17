@@ -7,7 +7,8 @@ import type { Item, Edge } from 'alkahest'
 import type { SiteGraph } from '$lib/graph/index.js'
 import type { ContentKind, SectionType } from '$lib/graph/types.js'
 import type { RequestHandler } from './$types'
-import { SUBSTACK_API_KEY, MCP_SECRET } from '$env/dynamic/private'
+import { env } from '$env/dynamic/private'
+const { SUBSTACK_API_KEY, MCP_SECRET } = env
 
 // ── HANDLERS ───────────────────────────────────────────────
 
