@@ -1,5 +1,5 @@
 import postgres from 'postgres'
-import { DATABASE_URL } from '$env/static/private'
+import { DATABASE_URL } from '$env/dynamic/private'
 import type { ContentKind } from '$lib/graph/types.js'
 
 // Single connection pool for the process lifetime
