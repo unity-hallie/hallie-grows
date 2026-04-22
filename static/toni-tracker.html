@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Tracker — Toni</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    background: #faf9f6;
+    color: #2a2a2a;
+    line-height: 1.7;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; margin-bottom: 0.5rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+  .subtitle { color: #777; font-style: italic; margin-bottom: 1.5rem; }
+
+  /* Password gate */
+  #gate { text-align: center; margin-top: 4rem; }
+  #gate input { font-family: inherit; font-size: 1rem; padding: 0.5rem 1rem; border: 1px solid #ccc; border-radius: 4px; width: 220px; }
+  #gate button { font-family: inherit; font-size: 1rem; padding: 0.5rem 1.2rem; margin-left: 0.5rem; background: #5a4a3a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  #gate button:hover { background: #3a2a1a; }
+  #gate .error { color: #c44; margin-top: 0.5rem; font-size: 0.9rem; }
+
+  /* Tracker */
+  #tracker { display: none; }
+  .job-card {
+    background: white;
+    border: 1px solid #e0ddd6;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+  .job-card.interested { border-left: 4px solid #6a9a6a; }
+  .job-card.applied { border-left: 4px solid #5a7aaa; }
+  .job-card.nope { opacity: 0.5; border-left: 4px solid #ccc; }
+  .job-title { font-weight: bold; font-size: 1.05rem; }
+  .job-meta { color: #777; font-size: 0.9rem; margin: 0.3rem 0; }
+  .job-links { margin: 0.5rem 0; }
+  .job-links a { color: #5a4a3a; font-size: 0.9rem; margin-right: 1rem; }
+  .job-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .job-actions button {
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid #ddd;
+    background: #f5f3ef;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .job-actions button:hover { background: #e8e4dc; }
+  .job-actions button.active { background: #5a4a3a; color: white; border-color: #5a4a3a; }
+  .job-notes {
+    margin-top: 0.5rem;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 2.5rem;
+    background: #faf9f6;
+  }
+  .job-notes:focus { outline: none; border-color: #5a4a3a; }
+
+  /* Add custom job */
+  #add-job { margin-top: 2rem; padding: 1.25rem; background: #f0ece4; border-radius: 6px; }
+  #add-job input, #add-job textarea {
+    font-family: inherit; font-size: 0.95rem; padding: 0.4rem 0.6rem;
+    border: 1px solid #ccc; border-radius: 4px; width: 100%; margin-bottom: 0.5rem;
+  }
+  #add-job button {
+    font-family: inherit; font-size: 0.95rem; padding: 0.4rem 1rem;
+    background: #5a4a3a; color: white; border: none; border-radius: 4px; cursor: pointer;
+  }
+
+  .filter-bar { margin: 1rem 0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .filter-bar button {
+    font-family: inherit; font-size: 0.8rem; padding: 0.25rem 0.7rem;
+    border: 1px solid #ddd; background: #f5f3ef; border-radius: 3px; cursor: pointer;
+  }
+  .filter-bar button.active { background: #5a4a3a; color: white; border-color: #5a4a3a; }
+
+  .save-notice { color: #6a9a6a; font-size: 0.8rem; font-style: italic; margin-top: 0.5rem; }
+  .footer { margin-top: 3rem; color: #999; font-size: 0.85rem; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Job Tracker</h1>
+<p class="subtitle">Your jobs, your notes, your pace.</p>
+
+<!-- Password gate -->
+<div id="gate">
+  <p>This page is for Toni.</p>
+  <div style="margin-top: 1rem;">
+    <input type="password" id="pw" placeholder="password" onkeydown="if(event.key==='Enter')unlock()">
+    <button onclick="unlock()">go</button>
+  </div>
+  <p class="error" id="pw-error"></p>
+</div>
+
+<!-- Tracker (hidden until auth) -->
+<div id="tracker">
+  <p style="margin-bottom:0.5rem;">Everything saves to your browser automatically. Add notes, mark status, add your own finds.</p>
+  <p><a href="/toni-jobs.html" style="font-size:0.9rem;">View the full static notes page &rarr;</a></p>
+
+  <div class="filter-bar">
+    <button class="active" onclick="setFilter('all', this)">all</button>
+    <button onclick="setFilter('interested', this)">interested</button>
+    <button onclick="setFilter('applied', this)">applied</button>
+    <button onclick="setFilter('nope', this)">dismissed</button>
+    <button onclick="setFilter('none', this)">unmarked</button>
+  </div>
+
+  <div id="job-list"></div>
+
+  <div id="add-job">
+    <h2 style="border:none; margin-top:0;">Add your own find</h2>
+    <input type="text" id="new-title" placeholder="Job title / company">
+    <input type="text" id="new-meta" placeholder="Salary, location, etc.">
+    <input type="text" id="new-url" placeholder="Link (optional)">
+    <textarea id="new-notes" placeholder="Notes" rows="2"></textarea>
+    <button onclick="addCustomJob()">add</button>
+  </div>
+
+  <p class="footer">Built by bro, April 2, 2026. Data lives in your browser only &mdash; nobody else can see your notes.</p>
+</div>
+
+<script>
+// Password: gourdgeous (a gift from bro)
+const HASH = 'gourdgeous';
+
+function unlock() {
+  const pw = document.getElementById('pw').value.toLowerCase().trim();
+  if (pw === HASH) {
+    sessionStorage.setItem('toni-auth', '1');
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('tracker').style.display = 'block';
+    renderJobs();
+  } else {
+    document.getElementById('pw-error').textContent = 'not quite.';
+  }
+}
+
+// Auto-unlock if already authed this session
+if (sessionStorage.getItem('toni-auth')) {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('tracker').style.display = 'block';
+}
+
+// Default jobs
+const DEFAULT_JOBS = [
+  {
+    id: 'ninepbs',
+    title: 'Nine PBS — Producer, Video Storytelling and Digital Content',
+    meta: '$56,500–$61,500 · Full-time · St. Louis · 2 positions',
+    url: 'https://www.ninepbs.org/blogs/employment/producer-video-storytelling-and-digital-content/',
+    category: 'traditional'
+  },
+  {
+    id: 'redteam',
+    title: 'AI Red Teaming / Creative Safety Testing',
+    meta: '$93k–$161k full-time, $32/hr contract · Remote · Flexible hours',
+    url: 'https://www.indeed.com/q-red-team-l-remote-jobs.html',
+    category: 'ai-weird'
+  },
+  {
+    id: 'evaluator',
+    title: 'AI Content Evaluator / Copy Editor',
+    meta: '$50–$60/hr · 20+ hrs/week · Remote',
+    url: 'https://www.indeed.com/q-ai-evaluator-l-remote-jobs.html',
+    category: 'ai-weird'
+  },
+  {
+    id: 'narrative',
+    title: 'AI Narrative Designer',
+    meta: 'Remote · US-based · Interactive storytelling',
+    url: 'https://www.indeed.com/q-Narrative-Design-l-Remote-jobs.html',
+    category: 'ai-weird'
+  },
+  {
+    id: 'docfund',
+    title: 'Coexistence Documentary Fund',
+    meta: 'Grant · Artist-driven cinematic nonfiction',
+    url: 'https://www.docsout.org/2026-coexistence-documentary-fund',
+    category: 'traditional'
+  },
+  {
+    id: 'podcast',
+    title: 'Podcast Video Producer (various)',
+    meta: '$42–$44/hr experienced · Remote · 575+ openings',
+    url: 'https://www.indeed.com/q-podcast-producer-l-remote-jobs.html',
+    category: 'traditional'
+  },
+  {
+    id: 'storyteller',
+    title: 'Storyteller Studios (St. Louis)',
+    meta: 'Emmy-winning · Nonprofit storytelling focus',
+    url: 'https://storytellerstudios.com/st-louis-video-production',
+    category: 'traditional'
+  },
+  {
+    id: 'storytrack',
+    title: 'StoryTrack (St. Louis)',
+    meta: 'Premiering 2026 · "Next great American film hub"',
+    url: 'https://www.storytrack.com/',
+    category: 'traditional'
+  },
+  {
+    id: 'curiousrefuge',
+    title: 'Curious Refuge — Creative AI Jobs Board',
+    meta: 'Browse board · AI filmmaking community',
+    url: 'https://curiousrefuge.com/ai-jobs-board',
+    category: 'ai-weird'
+  },
+  {
+    id: 'aisafety',
+    title: 'AISafety.com — Safety Jobs Board',
+    meta: 'Browse board · Red team and evaluation roles',
+    url: 'https://www.aisafety.com/jobs',
+    category: 'ai-weird'
+  }
+];
+
+function getState() {
+  try {
+    return JSON.parse(localStorage.getItem('toni-jobs-state') || '{}');
+  } catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem('toni-jobs-state', JSON.stringify(state));
+}
+
+function getCustomJobs() {
+  try {
+    return JSON.parse(localStorage.getItem('toni-custom-jobs') || '[]');
+  } catch { return []; }
+}
+
+function saveCustomJobs(jobs) {
+  localStorage.setItem('toni-custom-jobs', JSON.stringify(jobs));
+}
+
+let currentFilter = 'all';
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderJobs();
+}
+
+function renderJobs() {
+  const state = getState();
+  const custom = getCustomJobs();
+  const allJobs = [...DEFAULT_JOBS, ...custom];
+  const container = document.getElementById('job-list');
+  container.innerHTML = '';
+
+  allJobs.forEach(job => {
+    const s = state[job.id] || {};
+    const status = s.status || 'none';
+
+    if (currentFilter !== 'all' && status !== currentFilter) return;
+
+    const card = document.createElement('div');
+    card.className = 'job-card' + (status !== 'none' ? ' ' + status : '');
+
+    card.innerHTML = `
+      <div class="job-title">${job.title}</div>
+      <div class="job-meta">${job.meta}</div>
+      ${job.url ? `<div class="job-links"><a href="${job.url}" target="_blank" rel="noopener">view listing &rarr;</a></div>` : ''}
+      <div class="job-actions">
+        <button class="${status === 'interested' ? 'active' : ''}" onclick="setStatus('${job.id}', 'interested', this)">interested</button>
+        <button class="${status === 'applied' ? 'active' : ''}" onclick="setStatus('${job.id}', 'applied', this)">applied</button>
+        <button class="${status === 'nope' ? 'active' : ''}" onclick="setStatus('${job.id}', 'nope', this)">not for me</button>
+        ${job.id.startsWith('custom-') ? `<button onclick="removeCustom('${job.id}')" style="margin-left:auto;color:#c44;border-color:#c44;">remove</button>` : ''}
+      </div>
+      <textarea class="job-notes" placeholder="your notes..." oninput="saveNotes('${job.id}', this.value)">${s.notes || ''}</textarea>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function setStatus(id, status, btn) {
+  const state = getState();
+  if (!state[id]) state[id] = {};
+  state[id].status = state[id].status === status ? 'none' : status;
+  saveState(state);
+  renderJobs();
+}
+
+function saveNotes(id, text) {
+  const state = getState();
+  if (!state[id]) state[id] = {};
+  state[id].notes = text;
+  saveState(state);
+}
+
+function addCustomJob() {
+  const title = document.getElementById('new-title').value.trim();
+  if (!title) return;
+  const custom = getCustomJobs();
+  custom.push({
+    id: 'custom-' + Date.now(),
+    title: title,
+    meta: document.getElementById('new-meta').value.trim() || '',
+    url: document.getElementById('new-url').value.trim() || '',
+    category: 'custom'
+  });
+  saveCustomJobs(custom);
+  document.getElementById('new-title').value = '';
+  document.getElementById('new-meta').value = '';
+  document.getElementById('new-url').value = '';
+  // Save initial notes if provided
+  const notes = document.getElementById('new-notes').value.trim();
+  if (notes) {
+    const state = getState();
+    state[custom[custom.length-1].id] = { notes: notes };
+    saveState(state);
+  }
+  document.getElementById('new-notes').value = '';
+  renderJobs();
+}
+
+function removeCustom(id) {
+  const custom = getCustomJobs().filter(j => j.id !== id);
+  saveCustomJobs(custom);
+  const state = getState();
+  delete state[id];
+  saveState(state);
+  renderJobs();
+}
+
+// Init
+if (sessionStorage.getItem('toni-auth')) renderJobs();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toni's Bullet Playground</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #faf9f6;
+    color: #2a2a2a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .subtitle { color: #777; font-style: italic; margin-bottom: 1rem; }
+  canvas {
+    background: #1a1825;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .notes {
+    max-width: 720px;
+    line-height: 1.7;
+    padding: 1rem 1.25rem;
+    background: #f0ece4;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  .notes code {
+    background: #e8e0d0;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.92em;
+  }
+  .notes p { margin-bottom: 0.55rem; }
+  .notes p:last-child { margin-bottom: 0; }
+  .download {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    background: #5a4a3a;
+    color: #faf9f6;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 0.92rem;
+    margin-top: 0.35rem;
+  }
+  .download:hover { background: #2a1a0a; color: #faf9f6; }
+  .footer {
+    max-width: 720px;
+    color: #999;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<h1>Toni's Bullet Playground</h1>
+<p class="subtitle">A small arcade-shaped room. Yours to break.</p>
+
+<canvas id="game" width="600" height="720"></canvas>
+
+<div class="notes">
+  <p><strong>Play:</strong> Arrow keys to move. Hold <code>space</code> to shoot. <code>R</code> to restart after you die. The little orange dot on the ship is your <em>real</em> hitbox &mdash; the wings are for looks.</p>
+  <p><strong>Hack, devtools:</strong> press <code>F12</code> (on Mac, <code>&#8997;&#8984;J</code>) and type &mdash;<br>
+  <code>player.speed = 20</code> &middot; <code>spawn('doubleRing')</code> &middot; <code>wipe()</code> &middot; <code>god()</code> &middot; <code>help()</code></p>
+  <p><strong>Hack, source:</strong> the whole game is one HTML file. Grab it, open it in any text editor (TextEdit, VS Code, Notepad, whatever), change numbers, save, double-click to open your edited copy in the browser. The <em>patterns</em> are the first thing inside the <code>&lt;script&gt;</code> tag &mdash; each has comments inviting you to change things.</p>
+  <p><a class="download" href="toni-playground.html" download="toni-playground.html">Download the file &darr;</a></p>
+  <p>Nothing here is precious. If you break it, close the tab. Come back.</p>
+</div>
+
+<p class="footer">
+  Put together by bro with Hallie. The patterns use the same composition idea Hallie wrote for Jamestown: a handful of small functions, wired together. Once you see it, you see it.
+</p>
+
+<script>
+// =====================================================================
+//   TONI'S BULLET PLAYGROUND
+// =====================================================================
+//
+// This file reads top-to-bottom like a short zine. The order is:
+//
+//   1. PATTERNS   - the interesting part. Change numbers here.
+//   2. PRIMITIVES - the tiny functions the patterns are made of.
+//   3. ENGINE     - ship, enemies, the loop that ties it all together.
+//   4. COCKPIT    - what's exposed to the devtools console.
+//
+// You do NOT need to read the engine to play with the patterns.
+// Patterns call primitives. Primitives do math. The engine runs the clock.
+
+'use strict';
+
+const patterns = {};
+
+// =====================================================================
+//   1. PATTERNS
+// =====================================================================
+//
+// Each pattern is a function. The engine calls it every so often while
+// an enemy is alive. It fires bullets by calling `spawnBullet(x, y, angle, speed)`.
+//
+// The interesting thing is HOW they fire: by wiring together three primitives
+// (callAroundArc, callLerp, callDelay) plus a little modulo-and-sine math.
+
+// --- ring ---
+// Twelve bullets in a circle. The simplest thing that looks like anything.
+// Try: change 12 to 24. Then to 3. Then 100 (sorry).
+patterns.ring = (enemy) => {
+  callAroundArc(12, TAU, (angle) => {
+    spawnBullet(enemy.x, enemy.y, angle, 2);
+  });
+};
+
+// --- fan ---
+// An arc aimed at you. Five bullets in a 60-degree spread.
+// Try: change the sweep to PI for a half-circle.
+// Try: change 5 to 1 to make it a sniper shot. 5 to 40 for a wall.
+patterns.fan = (enemy) => {
+  const aim = angleTo(enemy, player);
+  callAroundArc(5, PI / 3, (offset) => {
+    spawnBullet(enemy.x, enemy.y, aim + offset, 3);
+  });
+};
+
+// --- ringWithGap ---
+// A ring of 24 bullets, but every 4th one is skipped. That leaves six gaps.
+// `i % 4 === 0` means "this index is a multiple of 4." That's the gap trick.
+// Try: change `gap` to 3. Then 8. Then 24 (what happens?).
+// Try: change `===` to `!==` to INVERT the gap. Now only the multiples fire.
+patterns.ringWithGap = (enemy) => {
+  const gap = 4;
+  callAroundArc(24, TAU, (angle, i) => {
+    if (i % gap === 0) return; // skip - this is where you can fly through.
+    spawnBullet(enemy.x, enemy.y, angle, 2);
+  });
+};
+
+// --- doubleRing ---
+// A ring OF rings. The outer call fires 4 times; each of those 4 points
+// is itself the origin of a small 8-bullet ring.
+//
+// This is the move: primitives calling primitives. Nested closures.
+// The inner callback captures `outerAngle` from the outer scope and uses
+// it to offset where the inner ring is born. That's what closures are for.
+//
+// Try: change the outer 4 to 6. The inner 8 to 3. The radius `r` to 10 or 80.
+// Try: inside the inner call, add `aim + offset` to point the inner rings AT you.
+patterns.doubleRing = (enemy) => {
+  const r = 50;
+  callAroundArc(4, TAU, (outerAngle) => {
+    const ox = enemy.x + Math.cos(outerAngle) * r;
+    const oy = enemy.y + Math.sin(outerAngle) * r;
+    callAroundArc(8, TAU, (innerAngle) => {
+      spawnBullet(ox, oy, innerAngle, 1.5);
+    });
+  });
+};
+
+// --- spiral ---
+// 36 bullets, fired ONE AT A TIME over time. Each slightly further around.
+// `callDelay` runs a function N times with a pause between calls.
+// That's how bursts become waves.
+//
+// The angle climbs with `i / 12`, meaning one full turn every 12 shots.
+// Across 36 shots, that's three full turns.
+//
+// Try: change 36 to 72. Change 40 to 10 (faster) or 200 (slower).
+// Try: change `i / 12` to `i / 6`. Then `i / 24`. Watch how tight the spiral is.
+patterns.spiral = (enemy) => {
+  callDelay(36, 40, (i) => {
+    const angle = (i / 12) * TAU;
+    spawnBullet(enemy.x, enemy.y, angle, 2.5);
+  });
+};
+
+// --- breathing ---
+// A spiral whose RADIUS pulses with a sine wave.
+//
+// Math.sin is a wave that bobs smoothly between -1 and +1 as its input climbs.
+// Math.sin(i / 4) bobs as `i` climbs, so the spawn radius breathes in and out.
+// Different bullets start at different distances from the enemy.
+//
+// Try: change the `20` at the end to `50` (bigger breath).
+// Try: change `i / 4` to `i / 1` (frantic) or `i / 12` (long slow breath).
+// Try: add `Math.sin(i / 8)` to the SPEED as well. It'll breathe in two ways.
+patterns.breathing = (enemy) => {
+  callDelay(48, 30, (i) => {
+    const angle = (i / 8) * TAU;
+    const radius = 30 + Math.sin(i / 4) * 20;    // <- this line is the breath.
+    const x = enemy.x + Math.cos(angle) * radius;
+    const y = enemy.y + Math.sin(angle) * radius;
+    spawnBullet(x, y, angle, 1.8);
+  });
+};
+
+// --- gasket ---
+// A ring of 12 little arcs, with a gap that WALKS around the ring.
+//
+// Every burst we pick a "burst number" from the clock, then skip whichever
+// outer index matches `(i + burst) % 4 === 0`. Because `burst` shifts each
+// time the pattern fires, the gap is in a different place each burst.
+// The hole walks.
+//
+// Each surviving outer point ALSO spawns a tiny 3-bullet fan pointed outward.
+// That's the gasket - a ring of rings with a migrating hole.
+//
+// Try: change `4` to `3` or `7` (gap size).
+// Try: remove `+ burst` to freeze the gap in place.
+// Try: change the inner `3, PI / 8` to `5, PI / 2` for fatter petals.
+patterns.gasket = (enemy) => {
+  const burst = Math.floor(Date.now() / 200) % 6;
+  callAroundArc(12, TAU, (outerAngle, i) => {
+    if ((i + burst) % 4 === 0) return;            // the gap, walking.
+    callAroundArc(3, PI / 8, (offset) => {
+      spawnBullet(enemy.x, enemy.y, outerAngle + offset, 2);
+    });
+  });
+};
+
+// --- wave ---
+// Bullets that SWIM sideways as they travel. Each one carries its own
+// birth time, captured in a closure. Every frame we ask: how old is
+// this bullet? Then we nudge it sideways by sin(age).
+//
+// This is the deepest closure move in the file: the `update` function we
+// attach to each bullet REMEMBERS that bullet's own `born` and `phase`.
+// Seven bullets, seven little memories, none leaking into each other.
+//
+// Try: change the 1.5 to 5 (wilder swim).
+// Try: change `age / 200` to `age / 50` (fast wobble) or `age / 800` (slow).
+// Try: change `phase = i` to `phase = 0` - now all bullets wobble in unison.
+patterns.wave = (enemy) => {
+  const aim = angleTo(enemy, player);
+  callLerp(7, -0.4, 0.4, (offset, i) => {
+    const born = Date.now();
+    const phase = i;
+    spawnBullet(enemy.x, enemy.y, aim + offset, 2, (b) => {
+      const age = Date.now() - born;
+      const sway = Math.sin(age / 200 + phase) * 1.5;
+      const perpAngle = aim + offset + PI / 2;
+      b.x += Math.cos(perpAngle) * sway * 0.1;     // the 0.1 dampens it.
+      b.y += Math.sin(perpAngle) * sway * 0.1;     // try 0.5 for chaos.
+    });
+  });
+};
+
+// =====================================================================
+//   2. PRIMITIVES
+// =====================================================================
+//
+// Three tiny functions. The patterns above are almost entirely these,
+// wired together with a little math.
+
+const PI = Math.PI;
+const TAU = PI * 2;             // one full turn. TAU = two pi. Easier to think in.
+
+// callAroundArc(n, sweep, fire)
+// Fires `fire` n times across an angular sweep, centered on 0.
+// The caller rotates it to point somewhere by adding a base angle.
+//
+//   sweep = TAU         -> full ring
+//   sweep = PI          -> half-circle
+//   sweep = PI / 3      -> narrow 60-degree fan
+//
+// `fire` receives (angle, i). `i` is the index - useful for the gap trick.
+function callAroundArc(n, sweep, fire) {
+  for (let i = 0; i < n; i++) {
+    const t = i / n;                               // 0 <= t < 1
+    const angle = (t - 0.5) * sweep;
+    fire(angle, i);
+  }
+}
+
+// callLerp(n, from, to, fire)
+// Fires `fire` n times with a value that walks from `from` to `to`.
+// "Lerp" is linear interpolation - a straight line between two numbers.
+// At step 0 you get exactly `from`. At step n-1 you get exactly `to`.
+function callLerp(n, from, to, fire) {
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0 : i / (n - 1);
+    const value = from + (to - from) * t;
+    fire(value, i);
+  }
+}
+
+// callDelay(n, interval, fire)
+// Fires `fire` n times, waiting `interval` milliseconds between each call.
+// This is how bursts become waves. setTimeout queues a call for later.
+function callDelay(n, interval, fire) {
+  for (let i = 0; i < n; i++) {
+    setTimeout(() => fire(i), i * interval);
+  }
+}
+
+// =====================================================================
+//   3. ENGINE
+// =====================================================================
+// Ship, enemies, bullets, loop. You don't need to read this to play with
+// patterns - but it's not long. Scroll through if you're curious.
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+
+const keys = {};
+const bullets = [];             // enemy bullets
+const shots = [];               // player bullets
+const enemies = [];
+let score = 0;
+let gameOver = false;
+
+const player = {
+  x: W / 2, y: H - 80,
+  speed: 4,
+  hitbox: 3,                    // smaller than the visual. Dodging feels good.
+  lives: 3,
+  invincible: false,
+  cooldown: 0,
+};
+
+addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+addEventListener('keyup', e => { keys[e.key] = false; });
+
+function angleTo(a, b) {
+  return Math.atan2(b.y - a.y, b.x - a.x);
+}
+
+function spawnBullet(x, y, angle, speed, update) {
+  bullets.push({
+    x, y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    r: 4,
+    update,                     // optional per-bullet update (see `wave`)
+  });
+}
+
+function spawnShot() {
+  shots.push({ x: player.x, y: player.y - 14, vy: -10, r: 3 });
+}
+
+const patternCycle = Object.keys(patterns);
+let patternIndex = 0;
+
+function spawnEnemy(name) {
+  const which = name || patternCycle[patternIndex++ % patternCycle.length];
+  enemies.push({
+    x: W / 2, y: -40,
+    targetY: 140,
+    hp: 50, maxHp: 50,
+    pattern: which,
+    cooldown: 60,
+    label: which,
+  });
+}
+
+let lastSpawn = 0;
+
+function tick(t) {
+  if (gameOver) {
+    drawGameOver();
+    requestAnimationFrame(tick);
+    return;
+  }
+
+  if (keys.ArrowLeft || keys.a)  player.x -= player.speed;
+  if (keys.ArrowRight || keys.d) player.x += player.speed;
+  if (keys.ArrowUp || keys.w)    player.y -= player.speed;
+  if (keys.ArrowDown || keys.s)  player.y += player.speed;
+  player.x = Math.max(10, Math.min(W - 10, player.x));
+  player.y = Math.max(10, Math.min(H - 10, player.y));
+
+  if (keys[' '] && player.cooldown <= 0) {
+    spawnShot();
+    player.cooldown = 6;
+  }
+  if (player.cooldown > 0) player.cooldown--;
+
+  if (enemies.length === 0 && t - lastSpawn > 1500) {
+    spawnEnemy();
+    lastSpawn = t;
+  }
+
+  for (const e of enemies) {
+    if (e.y < e.targetY) e.y += 1.5;
+    e.cooldown--;
+    if (e.cooldown <= 0 && e.y >= e.targetY) {
+      patterns[e.pattern](e);
+      e.cooldown = 80;          // frames between pattern bursts
+    }
+  }
+
+  for (const b of bullets) {
+    b.x += b.vx;
+    b.y += b.vy;
+    if (b.update) b.update(b, t);
+  }
+  for (const s of shots) s.y += s.vy;
+
+  for (const b of bullets) {
+    const dx = b.x - player.x, dy = b.y - player.y;
+    if (dx*dx + dy*dy < (b.r + player.hitbox) ** 2) {
+      b.dead = true;
+      if (!player.invincible) {
+        player.lives--;
+        if (player.lives <= 0) gameOver = true;
+      }
+    }
+  }
+
+  for (const s of shots) {
+    for (const e of enemies) {
+      const dx = s.x - e.x, dy = s.y - e.y;
+      if (dx*dx + dy*dy < 18 * 18) {
+        s.dead = true;
+        e.hp--;
+        if (e.hp <= 0) { e.dead = true; score++; }
+      }
+    }
+  }
+
+  cull(bullets, b => !b.dead && b.x > -20 && b.x < W+20 && b.y > -20 && b.y < H+20);
+  cull(shots,   s => !s.dead && s.y > -20);
+  cull(enemies, e => !e.dead);
+
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function cull(arr, keep) {
+  let w = 0;
+  for (let i = 0; i < arr.length; i++) {
+    if (keep(arr[i])) arr[w++] = arr[i];
+  }
+  arr.length = w;
+}
+
+function draw() {
+  ctx.fillStyle = '#1a1825';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const e of enemies) {
+    ctx.fillStyle = '#6a7890';
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, 16, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#bcc2cf';
+    ctx.font = '11px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText(e.label, e.x, e.y - 24);
+    ctx.fillStyle = '#3a3547';
+    ctx.fillRect(e.x - 20, e.y + 22, 40, 3);
+    ctx.fillStyle = '#d48a5a';
+    ctx.fillRect(e.x - 20, e.y + 22, 40 * (e.hp / e.maxHp), 3);
+  }
+
+  ctx.fillStyle = '#e5a962';
+  for (const b of bullets) {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, TAU);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#f0ece4';
+  for (const s of shots) {
+    ctx.fillRect(s.x - 1.5, s.y - 6, 3, 10);
+  }
+
+  ctx.fillStyle = player.invincible ? '#7a9a7a' : '#f0ece4';
+  ctx.beginPath();
+  ctx.moveTo(player.x, player.y - 10);
+  ctx.lineTo(player.x - 8, player.y + 8);
+  ctx.lineTo(player.x + 8, player.y + 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#d48a5a';
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, 2, 0, TAU);
+  ctx.fill();
+
+  ctx.fillStyle = '#bcc2cf';
+  ctx.font = '14px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Score: ${score}`, 12, 22);
+  ctx.textAlign = 'right';
+  ctx.fillText(`Lives: ${player.lives}`, W - 12, 22);
+}
+
+function drawGameOver() {
+  draw();
+  ctx.fillStyle = 'rgba(26, 24, 37, 0.75)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#f0ece4';
+  ctx.font = '32px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText("That's a run.", W/2, H/2 - 20);
+  ctx.font = '16px Georgia';
+  ctx.fillText(`You cleared ${score} ${score === 1 ? 'pattern' : 'patterns'}.`, W/2, H/2 + 12);
+  ctx.fillText('Press R to go again.', W/2, H/2 + 40);
+
+  if (keys.r || keys.R) {
+    player.lives = 3;
+    player.x = W/2; player.y = H - 80;
+    score = 0;
+    bullets.length = 0;
+    shots.length = 0;
+    enemies.length = 0;
+    gameOver = false;
+  }
+}
+
+// =====================================================================
+//   4. COCKPIT - what the devtools console can touch
+// =====================================================================
+//
+// These globals make the F12 console a real cockpit. Type any of them
+// at the prompt while the game is running. They read AND write - set
+// `player.speed = 20` and the ship actually gets faster on the next frame.
+
+window.player   = player;
+window.enemies  = enemies;
+window.bullets  = bullets;
+window.shots    = shots;
+window.patterns = patterns;
+
+window.spawn = (name) => {
+  if (name && !patterns[name]) {
+    console.warn(`no pattern named "${name}". try: ${Object.keys(patterns).join(', ')}`);
+    return;
+  }
+  spawnEnemy(name);
+};
+
+window.wipe = () => {
+  bullets.length = 0;
+  enemies.length = 0;
+};
+
+window.god = () => {
+  player.invincible = !player.invincible;
+  console.log(`invincibility: ${player.invincible ? 'on' : 'off'}`);
+};
+
+window.help = () => {
+  console.log([
+    "Toni's cockpit:",
+    '  player.speed = 20        faster ship',
+    '  player.lives = 99        cheap',
+    '  spawn()                  next enemy in cycle',
+    '  spawn("doubleRing")      specific pattern. names:',
+    '    ' + Object.keys(patterns).join(', '),
+    '  wipe()                   clear the screen',
+    '  god()                    toggle invincibility',
+  ].join('\n'));
+};
+
+// =====================================================================
+//   START
+// =====================================================================
+
+console.log("%cToni's Bullet Playground", 'font: 16px Georgia; color: #d48a5a');
+console.log('Type help() for the cockpit.');
+
+requestAnimationFrame(tick);
+</script>
+
+</body>
+</html>
