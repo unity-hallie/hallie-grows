@@ -22,3 +22,6 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Raw GloVe embeddings (~1GB) — only the quantised static/embed/ output is checked in
+.embeddings/
